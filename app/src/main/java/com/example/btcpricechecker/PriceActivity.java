@@ -371,19 +371,18 @@ public class PriceActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    // Format price with commas
+                    // Format price with commas and add currency symbol
                     String priceString = String.format(Locale.US, "%,d", finalActualPrice);
-                    priceTextView.setText(priceString);
+                    String priceWithCurrency = priceString + finalCurrencySymbol;
+                    priceTextView.setText(priceWithCurrency);
 
-                    // Set currency symbol and ensure visibility
-                    currencyTextView.setText(finalCurrencySymbol);
-                    currencyTextView.setVisibility(View.VISIBLE);
+                    // Currency is now part of price text, so hide the separate currency view
+                    currencyTextView.setVisibility(View.GONE);
 
-                    // Calculate dynamic font size for price
-                    int priceLength = priceString.length();
-                    float priceFontSize = calculateDynamicFontSize(priceLength, screenWidth);
+                    // Calculate dynamic font size based on total text length (price + currency symbol)
+                    int totalLength = priceWithCurrency.length();
+                    float priceFontSize = calculateDynamicFontSize(totalLength, screenWidth);
                     priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, priceFontSize);
-                    currencyTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, priceFontSize);
 
                     // Calculate change direction and colors
                     String arrow = isPriceUp ? "▲" : "▼";

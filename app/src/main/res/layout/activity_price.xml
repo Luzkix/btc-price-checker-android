@@ -61,40 +61,26 @@
             android:clipChildren="false"
             android:clipToPadding="false">
 
-            <!-- Price display with currency on same line -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:clipChildren="false"
-                android:clipToPadding="false">
+            <!-- Single TextView for price + currency to ensure currency always shows -->
+            <TextView
+                android:id="@+id/priceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="0$"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:textColor="@color/price_day_color"
+                android:includeFontPadding="false"
+                android:singleLine="true" />
 
-                <TextView
-                    android:id="@+id/priceTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/abril_fatface"
-                    android:textColor="@color/price_day_color"
-                    android:includeFontPadding="false"
-                    android:singleLine="true" />
-
-                <TextView
-                    android:id="@+id/currencyTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/abril_fatface"
-                    android:textColor="@color/currency_day_color"
-                    android:includeFontPadding="false"
-                    android:singleLine="true" />
-
-            </LinearLayout>
+            <!-- Hidden TextView just for currency color reference (will be updated in code) -->
+            <TextView
+                android:id="@+id/currencyTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:text="$" />
 
         </FrameLayout>
 
