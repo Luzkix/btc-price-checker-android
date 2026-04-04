@@ -167,6 +167,30 @@ public class PriceActivity extends AppCompatActivity {
         // Check if screen is wider (aspect ratio >= 16/8 = 2.0)
         float aspectRatio = (float) screenWidth / screenHeight;
 
+        // Apply layout margins based on original CSS specs
+        // BTC text: padding-left: 4vw
+        LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
+        btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
+        btcTextBlock.setLayoutParams(btcParams);
+
+        // Clock block: padding-right: 3vw, padding-top: 5vh
+        LinearLayout clockBlock = findViewById(R.id.clockBlock);
+        if (clockBlock != null) {
+            clockBlock.setPadding(
+                0,  // left
+                (int) (screenHeight * 0.05f),  // top: 5vh
+                (int) (screenWidth * 0.03f),   // right: 3vw
+                0   // bottom
+            );
+        }
+
+        // Last update block: padding-right: 2vw, with bottom margin
+        LinearLayout.LayoutParams lastUpdateParams = (LinearLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
+        lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f)); // 2vw from right
+        // Add bottom margin to shift text up from bottom edge
+        lastUpdateParams.bottomMargin = (int) (screenHeight * 0.01f); // Small offset
+        lastUpdateBlock.setLayoutParams(lastUpdateParams);
+
         if (aspectRatio >= 2.0f) {
             // Hide BTC text block on wider screens
             btcTextBlock.setVisibility(View.GONE);
@@ -399,20 +423,28 @@ public class PriceActivity extends AppCompatActivity {
     /**
      * Calculate dynamic font size based on text length to fit screen width
      * Similar to the JavaScript: const charWidth = 0.59; const maxFontSize = 100 / (len * charWidth);
-     * Converted to pixels for Android
+     * The original web version uses viewport width units (vw)
+     * We convert to Android SP units
      */
     private float calculateDynamicFontSize(int charCount, int screenWidthPx) {
         // Character width approximation for Abril Fatface
-        float charWidthRatio = 0.59f;
+        // This is slightly wider than average to ensure text fits
+        float charWidthRatio = 0.62f;
 
-        // Calculate max font size in pixels: screenWidth / (charCount * charWidth)
-        float maxFontSizePx = screenWidthPx / (charCount * charWidthRatio);
+        // Calculate max font size in vw units (viewport width percentage)
+        // Formula from original: maxFontSize = 100 / (len * charWidth)
+        float maxFontSizeVw = 100f / (charCount * charWidthRatio);
 
-        // Limit font size to reasonable bounds (max 70vh for price)
-        float maxFontSizeFromHeight = screenHeight * 0.7f;
+        // Convert vw to pixels: (screenWidth * percentage) / 100
+        float maxFontSizePx = (screenWidthPx * maxFontSizeVw) / 100f;
+
+        // Limit font size to max 60vh (leave some room for padding)
+        float maxFontSizeFromHeight = screenHeight * 0.60f;
+
+        // Take the smaller of the two to ensure text fits both width and height
         float limitedSizePx = Math.min(maxFontSizePx, maxFontSizeFromHeight);
 
-        // Convert to SP
+        // Convert to SP (taking into account screen density)
         return limitedSizePx / density;
     }
 

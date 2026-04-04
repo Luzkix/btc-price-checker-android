@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/price_day_bg">
 
-    <!-- Orange border for day mode (applied programmatically) -->
+    <!-- Orange border for day mode -->
     <View
         android:id="@+id/borderView"
         android:layout_width="match_parent"
@@ -14,40 +14,22 @@
         android:background="@drawable/day_border"
         android:visibility="gone" />
 
-    <!-- Main content container -->
+    <!-- Main content container - bottom layer -->
     <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="0dp">
 
-        <!-- Header Section - 15vh: Clock with icon -->
-        <LinearLayout
-            android:id="@+id/clockBlock"
+        <!-- Empty space for clock (15vh) - clocks will be overlaid on top -->
+        <View
+            android:id="@+id/clockSpacer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="15"
-            android:orientation="horizontal"
-            android:gravity="end|center_vertical"
-            android:paddingTop="5dp"
-            android:paddingEnd="16dp"
-            android:paddingStart="0dp">
+            android:layout_weight="15" />
 
-            <TextView
-                android:id="@+id/clockTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🕑00:00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/abril_fatface"
-                android:textColor="@color/clock_day_color"
-                android:includeFontPadding="false"
-                android:lineSpacingMultiplier="0.8" />
-
-        </LinearLayout>
-
-        <!-- BTC Text Section - 15vh: Logo -->
+        <!-- BTC Text Section - Logo -->
         <LinearLayout
             android:id="@+id/btcTextBlock"
             android:layout_width="match_parent"
@@ -55,8 +37,10 @@
             android:layout_weight="15"
             android:orientation="horizontal"
             android:gravity="start|center_vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="0dp">
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <ImageView
                 android:id="@+id/btcText"
@@ -68,12 +52,14 @@
 
         </LinearLayout>
 
-        <!-- Price Container - 70vh (85vh on wide screens) -->
+        <!-- Price Container -->
         <FrameLayout
             android:id="@+id/priceContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="70">
+            android:layout_weight="49"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <!-- Price display with currency on same line -->
             <LinearLayout
@@ -82,9 +68,10 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:paddingStart="8dp"
-                android:paddingEnd="8dp">
+                android:paddingEnd="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-                <!-- Price number - dynamically sized -->
                 <TextView
                     android:id="@+id/priceTextView"
                     android:layout_width="wrap_content"
@@ -96,7 +83,6 @@
                     android:includeFontPadding="false"
                     android:singleLine="true" />
 
-                <!-- Currency symbol -->
                 <TextView
                     android:id="@+id/currencyTextView"
                     android:layout_width="wrap_content"
@@ -112,7 +98,7 @@
 
         </FrameLayout>
 
-        <!-- Price Change Section - 17vh -->
+        <!-- Price Change Section -->
         <LinearLayout
             android:id="@+id/changeBlock"
             android:layout_width="match_parent"
@@ -121,9 +107,10 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:paddingEnd="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-            <!-- Price change value with arrow -->
             <TextView
                 android:id="@+id/changeTextView"
                 android:layout_width="0dp"
@@ -136,7 +123,6 @@
                 android:gravity="center"
                 android:singleLine="true" />
 
-            <!-- Percentage change with arrow -->
             <TextView
                 android:id="@+id/changePercentageTextView"
                 android:layout_width="0dp"
@@ -151,7 +137,7 @@
 
         </LinearLayout>
 
-        <!-- Last Update Section - 4vh -->
+        <!-- Last Update Section -->
         <LinearLayout
             android:id="@+id/lastUpdateBlock"
             android:layout_width="match_parent"
@@ -159,7 +145,9 @@
             android:layout_weight="4"
             android:orientation="horizontal"
             android:gravity="end|center_vertical"
-            android:paddingEnd="16dp">
+            android:paddingEnd="0dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <TextView
                 android:id="@+id/lastUpdateTextView"
@@ -167,11 +155,40 @@
                 android:layout_height="wrap_content"
                 android:text="Last price info: 00:00:00 CET"
                 android:textSize="3sp"
+                android:textStyle="bold"
                 android:textColor="@color/last_update_day"
                 android:fontFamily="sans-serif"
                 android:includeFontPadding="false" />
 
         </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Clock overlay - TOP LAYER (z-index highest) -->
+    <LinearLayout
+        android:id="@+id/clockBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end|center_vertical"
+        android:paddingTop="0dp"
+        android:paddingEnd="0dp"
+        android:paddingStart="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <TextView
+            android:id="@+id/clockTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🕑00:00"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/abril_fatface"
+            android:textColor="@color/clock_day_color"
+            android:includeFontPadding="true"
+            android:layout_marginTop="0dp"
+            android:lineSpacingMultiplier="1" />
 
     </LinearLayout>
 
