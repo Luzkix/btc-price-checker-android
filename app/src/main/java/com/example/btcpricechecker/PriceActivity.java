@@ -374,7 +374,10 @@ public class PriceActivity extends AppCompatActivity {
                     // Format price with commas
                     String priceString = String.format(Locale.US, "%,d", finalActualPrice);
                     priceTextView.setText(priceString);
+
+                    // Set currency symbol and ensure visibility
                     currencyTextView.setText(finalCurrencySymbol);
+                    currencyTextView.setVisibility(View.VISIBLE);
 
                     // Calculate dynamic font size for price
                     int priceLength = priceString.length();
