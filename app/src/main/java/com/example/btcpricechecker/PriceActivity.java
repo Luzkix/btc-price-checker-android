@@ -74,6 +74,9 @@ public class PriceActivity extends AppCompatActivity {
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
 
+        // Keep screen on - prevent screen from turning off
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         setContentView(R.layout.activity_price);
 
         // Get screen dimensions
