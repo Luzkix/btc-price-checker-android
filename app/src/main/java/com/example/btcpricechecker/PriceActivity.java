@@ -6,11 +6,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -26,15 +24,20 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PriceActivity extends AppCompatActivity {
+    private static final int PRICE_UPDATE_INTERVAL = 10; // 10 seconds cache
     private String currentCurrency = "USD";
     private boolean nightMode = false;
     private Timer timer;
     private Handler handler = new Handler(Looper.getMainLooper());
-    private boolean isImmersive = true;
-
+    
+    // Caching variables
+    private JSONObject cachedUsdData = null;
+    private JSONObject cachedEurData = null;
+    private long usdLastUpdate = 0;
+    private long eurLastUpdate = 0;
+    
     // UI Elements
     private TextView clockTextView;
-    private ImageView btcImageView;
     private TextView priceTextView;
     private TextView currencyTextView;
     private TextView changeArrow;
@@ -42,7 +45,7 @@ public class PriceActivity extends AppCompatActivity {
     private TextView changePercentageTextView;
     private TextView lastUpdateTextView;
     private View rootLayout;
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,19 +66,15 @@ public class PriceActivity extends AppCompatActivity {
             nightMode = extras.getBoolean("nightMode", false);
         }
 
-    // Initialize UI elements
-    rootLayout = findViewById(R.id.priceRootLayout);
-    clockTextView = findViewById(R.id.clockTextView);
-    btcImageView = findViewById(R.id.btcLogo);
-    priceTextView = findViewById(R.id.priceTextView);
-    currencyTextView = findViewById(R.id.currencyTextView);
-    changeArrow = findViewById(R.id.changeArrow);
-    changeTextView = findViewById(R.id.changeTextView);
-    changePercentageTextView = findViewById(R.id.changePercentageTextView);
-    lastUpdateTextView = findViewById(R.id.lastUpdateTextView);
-    
-    // Drop shadow for price (original CSS: text-shadow: 2px 2px 4px rgba(0,0,0,0.3))
-    priceTextView.setShadowLayer(4, 2, 2, Color.parseColor("#5A000000"));
+        // Initialize UI elements
+        rootLayout = findViewById(R.id.priceRootLayout);
+        clockTextView = findViewById(R.id.clockTextView);
+        priceTextView = findViewById(R.id.priceTextView);
+        currencyTextView = findViewById(R.id.currencyTextView);
+        changeArrow = findViewById(R.id.changeArrow);
+        changeTextView = findViewById(R.id.changeTextView);
+        changePercentageTextView = findViewById(R.id.changePercentageTextView);
+        lastUpdateTextView = findViewById(R.id.lastUpdateTextView);
 
         // Apply night/day theme colors
         applyTheme();
@@ -93,18 +92,38 @@ public class PriceActivity extends AppCompatActivity {
     private void applyTheme() {
         if (nightMode) {
             // Night mode colors from pricePageStyleNight.css
-            rootLayout.setBackgroundColor(Color.parseColor("#000000"));
-            clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
-            currencyTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
+            if (rootLayout != null) {
+                rootLayout.setBackgroundColor(Color.parseColor("#000000"));
+            }
+            if (clockTextView != null) {
+                clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
+            }
+            if (priceTextView != null) {
+                priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
+            }
+            if (currencyTextView != null) {
+                currencyTextView.setTextColor(Color.parseColor("#6B6C6C"));
+            }
+            if (lastUpdateTextView != null) {
+                lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
+            }
         } else {
             // Day mode colors from pricePageStyle.css
-            rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
-            clockTextView.setTextColor(Color.parseColor("#000000"));
-            priceTextView.setTextColor(Color.parseColor("#000000"));
-            currencyTextView.setTextColor(Color.parseColor("#000000"));
-            lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
+            if (rootLayout != null) {
+                rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            }
+            if (clockTextView != null) {
+                clockTextView.setTextColor(Color.parseColor("#000000"));
+            }
+            if (priceTextView != null) {
+                priceTextView.setTextColor(Color.parseColor("#000000"));
+            }
+            if (currencyTextView != null) {
+                currencyTextView.setTextColor(Color.parseColor("#000000"));
+            }
+            if (lastUpdateTextView != null) {
+                lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
+            }
         }
     }
 
@@ -121,11 +140,9 @@ public class PriceActivity extends AppCompatActivity {
 
     private void showBackToHomeDialog() {
         // Exit immersive mode first so dialog is visible
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-
-        int bgColor = nightMode ? Color.parseColor("#222222") : Color.parseColor("#FFFFFF");
-        int textColor = nightMode ? Color.parseColor("#e7dfc6") : Color.parseColor("#1a1a2e");
-        int buttonColor = Color.parseColor("#f7931a");
+        if (rootLayout != null) {
+            rootLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Return to Home");
@@ -143,6 +160,7 @@ public class PriceActivity extends AppCompatActivity {
         builder.setOnCancelListener(dialog -> {
             // Return to immersive mode
             setImmersiveMode();
+            dialog.dismiss();
         });
         builder.show();
     }
@@ -160,17 +178,39 @@ public class PriceActivity extends AppCompatActivity {
                     fetchBitcoinPrice();
                 });
             }
-        }, 30000, 30000); // Update every 30 seconds
+        }, 0, 30000); // Update every 30 seconds
     }
 
-    private void updateClock() {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        clockTextView.setText(sdf.format(new Date()));
+private void updateClock() {
+        if (clockTextView != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            clockTextView.setText(sdf.format(new Date()));
+        }
     }
 
     private void fetchBitcoinPrice() {
         new Thread(() -> {
             try {
+                // Check if we should use cached data
+                JSONObject cachedData = null;
+                long currentTime = System.currentTimeMillis() / 1000;
+                long lastUpdate = 0;
+                
+                if (currentCurrency.equals("USD")) {
+                    cachedData = cachedUsdData;
+                    lastUpdate = usdLastUpdate;
+                } else if (currentCurrency.equals("EUR")) {
+                    cachedData = cachedEurData;
+                    lastUpdate = eurLastUpdate;
+                }
+                
+                // If we have cached data and it's not expired, use it
+                if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
+                    updatePriceUI(cachedData);
+                    return;
+                }
+                
+                // Otherwise fetch new data
                 String urlString = "https://api.exchange.coinbase.com/products/BTC-" + currentCurrency + "/stats";
                 URL url = new URL(urlString);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -189,111 +229,119 @@ public class PriceActivity extends AppCompatActivity {
                     in.close();
 
                     JSONObject json = new JSONObject(content.toString());
+                    
+                    // Cache the data
+                    if (currentCurrency.equals("USD")) {
+                        cachedUsdData = json;
+                        usdLastUpdate = currentTime;
+                    } else if (currentCurrency.equals("EUR")) {
+                        cachedEurData = json;
+                        eurLastUpdate = currentTime;
+                    }
+                    
                     updatePriceUI(json);
                 } else {
-                    handler.post(() -> {
-                        priceTextView.setText("ERROR");
-                        changeTextView.setText("API Error");
-                        changePercentageTextView.setText("");
+                    runOnUiThread(() -> {
+                        if (priceTextView != null) {
+                            priceTextView.setText("ERROR");
+                            changeTextView.setText("API Error");
+                            changePercentageTextView.setText("");
+                        }
                     });
                 }
                 conn.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();
-                handler.post(() -> {
-                    priceTextView.setText("ERROR");
-                    changeTextView.setText("Connection failed");
-                    changePercentageTextView.setText("");
+                runOnUiThread(() -> {
+                    if (priceTextView != null) {
+                        priceTextView.setText("ERROR");
+                        changeTextView.setText("Connection failed");
+                        changePercentageTextView.setText("");
+                    }
                 });
             }
         }).start();
     }
 
-    private void updatePriceUI(JSONObject json) {
+private void updatePriceUI(JSONObject json) {
         try {
+            // Parse the JSON response from Coinbase API
             double open = json.getDouble("open");
             double last = json.getDouble("last");
-
-            // Format price with commas (same as JavaScript: toLocaleString('en-US'))
-            String priceString = String.format(Locale.US, "%,.0f", last);
+            
+            // Calculate price change values
+            int actualPrice = (int) last;
+            int priceChange = (int) (last - open);
+            
+            // Format the price change percentage
+            double changePercentage = ((last / open) - 1) * 100;
+            String priceChangePercentage = String.format("%.2f", Math.abs(changePercentage));
+            
+            // Format the currency symbol
             String currencySymbol = currentCurrency;
-
-            // Calculate change
-            double change = last - open;
-            double changePercentage = (change / open) * 100;
-
-    // Arrow symbols from original HTML: ▲ for up, ▼ for down
-    String arrow = change >= 0 ? "▲" : "▼";
-    
-    // Colors from CSS:
-    // Day: price-up = #4FC165, price-down = #FAA31B
-    // Night: price-up = #005e0d, price-down = #966211
-    String arrowColor;
-    if (change >= 0) {
-        arrowColor = nightMode ? "#005e0d" : "#4FC165";
-    } else {
-        arrowColor = nightMode ? "#966211" : "#FAA31B";
-    }
-
-            // Adjust font size based on price length
-            // Original JS logic from CSS: font-size based on viewport width
-            adjustFontSize(priceString);
-
-        final String priceStr = priceString;
-        final String changeStr = String.format(Locale.US, "%s%,.0f %s",
-                change >= 0 ? "+" : "", change, currencySymbol);
-        final String percentStr = String.format(Locale.US, "%s%.2f%%",
-                change >= 0 ? "+" : "", changePercentage);
-        final String arrowColorStr = arrowColor;
-
-            handler.post(() -> {
-                priceTextView.setText(priceStr);
-                currencyTextView.setText(currencySymbol);
-
-        // Arrow (▲/▼) with dynamic color
-        changeArrow.setText(arrow);
-        changeArrow.setTextColor(Color.parseColor(arrowColor));
-        
-        // Change text (no arrow, just value)
-        changeTextView.setText(changeStr.replace(arrow, "").trim());
-        changeTextView.setTextColor(Color.parseColor(nightMode ? "#e7dfc6" : "#000000"));
-
-        // Percentage text (no arrow, just value)
-        changePercentageTextView.setText(percentStr.replace(arrow, "").trim());
-        changePercentageTextView.setTextColor(Color.parseColor(arrowColor));
-
-                // Last update - same format as original: "Last price info: HH:mm:ss CET"
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-                lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
+            if (currentCurrency.equals("USD")) {
+                currencySymbol = "$";
+            } else if (currentCurrency.equals("EUR")) {
+                currencySymbol = "€";
+            }
+            
+            // Final variables for use in inner class
+            final String finalCurrencySymbol = currencySymbol;
+            final int finalPriceChange = priceChange;
+            final String finalPriceChangePercentage = priceChangePercentage;
+            final int finalActualPrice = actualPrice;
+            
+            // Update the UI elements
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Format price with commas
+                    String priceString = String.format(Locale.US, "%,d", finalActualPrice);
+                    if (priceTextView != null) {
+                        priceTextView.setText(priceString);
+                        currencyTextView.setText(finalCurrencySymbol);
+                    }
+                    
+                    // Calculate change direction
+                    String arrow = finalPriceChange >= 0 ? "▲" : "▼";
+                    int color;
+                    if (finalPriceChange >= 0) {
+                        color = nightMode ? Color.parseColor("#005e0d") : Color.parseColor("#4FC165");
+                    } else {
+                        color = nightMode ? Color.parseColor("#966211") : Color.parseColor("#FAA31B");
+                    }
+                    
+                    // Set the arrow symbol and color
+                    if (changeArrow != null) {
+                        changeArrow.setText(arrow);
+                        changeArrow.setTextColor(color);
+                    }
+                    
+                    // Set change text without arrow
+                    String changeText = String.format(Locale.US, "%s%,d %s", 
+                        finalPriceChange >= 0 ? "+" : "", Math.abs(finalPriceChange), finalCurrencySymbol);
+                    if (changeTextView != null) {
+                        changeTextView.setText(changeText);
+                    }
+                    
+                    // Set percentage text
+                    String changePercentageText = String.format(Locale.US, "%s%s%%", 
+                        finalPriceChange >= 0 ? "+" : "", finalPriceChangePercentage);
+                    if (changePercentageTextView != null) {
+                        changePercentageTextView.setText(changePercentageText);
+                        changePercentageTextView.setTextColor(color);
+                    }
+                    
+                    // Update last update time
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+                    if (lastUpdateTextView != null) {
+                        lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
+                    }
+                }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void adjustFontSize(String price) {
-        // Original CSS: font-size based on 8vw
-        // Get screen width and calculate relative size
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        float defaultTextSize = screenWidth * 0.08f; // 8% of screen width
-        
-        // Adjust based on price length to prevent overflow
-        int len = price.length();
-        if (len > 8) {
-            defaultTextSize *= 0.8;
-        } else if (len > 7) {
-            defaultTextSize *= 0.9;
-        } else if (len > 6) {
-            defaultTextSize *= 0.95;
-        }
-        
-        // Apply sizes (convert px to sp)
-        float scaledDensity = getResources().getDisplayMetrics().scaledDensity;
-        priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultTextSize);
-        currencyTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultTextSize * 0.7f);
-        changeTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultTextSize * 0.3f);
-        changePercentageTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultTextSize * 0.3f);
-        changeArrow.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultTextSize * 0.3f);
     }
 
     @Override

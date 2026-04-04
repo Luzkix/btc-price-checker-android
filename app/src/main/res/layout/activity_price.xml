@@ -43,94 +43,96 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="00:00"
-        android:textSize="48sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:textColor="@color/clock_day_color"
-        android:fontFamily="sans-serif-light"
+        android:fontFamily="cursive"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="10dp"
-        android:layout_marginTop="3dp" />
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp" />
 
-    <!-- BTC Logo -->
+    <!-- BTC Text (hidden on wider screens) -->
     <ImageView
-        android:id="@+id/btcLogo"
+        android:id="@+id/btcText"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/btc_logo"
+        android:src="@drawable/btc_text"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineTop30" />
+
+    <!-- Price Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/priceContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/guidelineTop15"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/priceTextView"
-        app:layout_constraintBottom_toTopOf="@id/guidelineTop30"
-        android:layout_marginStart="13dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineTop75">
 
-    <!-- Price -->
-    <TextView
-        android:id="@+id/priceTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textSize="80sp"
-        android:textStyle="bold"
-        android:textColor="@color/price_day_color"
-        android:fontFamily="monospace"
-        android:letterSpacing="0.05"
-        app:layout_constraintTop_toTopOf="@id/btcLogo"
-        app:layout_constraintBottom_toBottomOf="@id/btcLogo"
-        app:layout_constraintStart_toEndOf="@id/btcLogo"
-        app:layout_constraintHorizontal_chainStyle="packed" />
+        <!-- BTC Price with dynamic font sizing -->
+        <TextView
+            android:id="@+id/priceTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textStyle="bold"
+            android:fontFamily="cursive"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="0dp" />
 
-    <!-- Currency -->
-    <TextView
-        android:id="@+id/currencyTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="USD"
-        android:textSize="56sp"
-        android:textStyle="bold"
-        android:textColor="@color/currency_day_color"
-        android:fontFamily="sans-serif-condensed"
-        app:layout_constraintTop_toBottomOf="@id/priceTextView"
-        app:layout_constraintStart_toStartOf="@id/priceTextView"
-        android:layout_marginTop="-10dp" />
+        <!-- Currency symbol -->
+        <TextView
+            android:id="@+id/currencyTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="USD"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
+            app:layout_constraintTop_toBottomOf="@id/priceTextView"
+            app:layout_constraintStart_toStartOf="@id/priceTextView"
+            android:layout_marginTop="8dp" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Arrow (▲/▼) -->
+    <!-- Price Change Indicators -->
     <TextView
         android:id="@+id/changeArrow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="▲"
-        android:textSize="40sp"
+        android:textSize="15sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/guidelineTop75"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/changeTextView"
-        android:layout_marginStart="36dp" />
+        android:layout_marginStart="16dp" />
 
-    <!-- Price Change -->
     <TextView
         android:id="@+id/changeTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="+0"
-        android:textSize="40sp"
+        android:textSize="15sp"
         android:textStyle="bold"
-        android:textColor="@color/price_up_day"
-        android:fontFamily="monospace"
         app:layout_constraintTop_toTopOf="@id/changeArrow"
         app:layout_constraintBottom_toBottomOf="@id/changeArrow"
-        app:layout_constraintStart_toEndOf="@id/changeArrow" />
+        app:layout_constraintStart_toEndOf="@id/changeArrow"
+        android:layout_marginStart="8dp" />
 
-    <!-- Percentage Change -->
     <TextView
         android:id="@+id/changePercentageTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="+0.00%"
-        android:textSize="40sp"
+        android:textSize="15sp"
         android:textStyle="bold"
-        android:textColor="@color/price_up_day"
-        android:fontFamily="monospace"
         app:layout_constraintStart_toEndOf="@id/changeTextView"
         app:layout_constraintTop_toTopOf="@id/changeArrow"
         app:layout_constraintBottom_toBottomOf="@id/changeArrow"
@@ -142,10 +144,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Last price info: 00:00:00 CET"
-        android:textSize="14sp"
+        android:textSize="3sp"
         android:textColor="@color/last_update_day"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/guidelineBottom96"
-        android:layout_marginEnd="6dp" />
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
