@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="clock_text_size">48sp</dimen>
-    <dimen name="btc_text_size">24sp</dimen>
-    <dimen name="price_text_size">96sp</dimen>
-    <dimen name="currency_text_size">64sp</dimen>
-    <dimen name="change_text_size">32sp</dimen>
-    <dimen name="update_text_size">16sp</dimen>
+    <!-- These are base values - actual sizes are calculated dynamically in code -->
+    <dimen name="clock_text_size">14sp</dimen>
+    <dimen name="price_text_size">70sp</dimen>
+    <dimen name="currency_text_size">70sp</dimen>
+    <dimen name="change_text_size">15sp</dimen>
+    <dimen name="update_text_size">3sp</dimen>
     <dimen name="padding_standard">16dp</dimen>
+
+    <!-- Viewport-based heights (approximate, actual are calculated in code) -->
+    <dimen name="header_height_percent">15</dimen>
+    <dimen name="btc_text_height_percent">15</dimen>
+    <dimen name="price_container_height_percent">70</dimen>
+    <dimen name="change_container_height_percent">17</dimen>
+    <dimen name="last_update_height_percent">4</dimen>
 </resources>

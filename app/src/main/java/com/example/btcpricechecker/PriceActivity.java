@@ -3,15 +3,21 @@ package com.example.btcpricechecker;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.res.ResourcesCompat;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -29,23 +35,34 @@ public class PriceActivity extends AppCompatActivity {
     private boolean nightMode = false;
     private Timer timer;
     private Handler handler = new Handler(Looper.getMainLooper());
-    
+
     // Caching variables
     private JSONObject cachedUsdData = null;
     private JSONObject cachedEurData = null;
     private long usdLastUpdate = 0;
     private long eurLastUpdate = 0;
-    
+
     // UI Elements
+    private FrameLayout rootLayout;
+    private View borderView;
     private TextView clockTextView;
+    private ImageView btcTextImage;
+    private LinearLayout btcTextBlock;
     private TextView priceTextView;
     private TextView currencyTextView;
-    private TextView changeArrow;
     private TextView changeTextView;
     private TextView changePercentageTextView;
     private TextView lastUpdateTextView;
-    private View rootLayout;
-    
+    private LinearLayout lastUpdateBlock;
+
+    // Font
+    private Typeface abrilFatfaceFont;
+
+    // Screen dimensions
+    private int screenHeight;
+    private int screenWidth;
+    private float density;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +76,15 @@ public class PriceActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_price);
 
+        // Get screen dimensions
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        screenHeight = metrics.heightPixels;
+        screenWidth = metrics.widthPixels;
+        density = metrics.density;
+
+        // Load font
+        abrilFatfaceFont = ResourcesCompat.getFont(this, R.font.abril_fatface);
+
         // Extract parameters
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -68,19 +94,28 @@ public class PriceActivity extends AppCompatActivity {
 
         // Initialize UI elements
         rootLayout = findViewById(R.id.priceRootLayout);
+        borderView = findViewById(R.id.borderView);
         clockTextView = findViewById(R.id.clockTextView);
+        btcTextImage = findViewById(R.id.btcText);
+        btcTextBlock = findViewById(R.id.btcTextBlock);
         priceTextView = findViewById(R.id.priceTextView);
         currencyTextView = findViewById(R.id.currencyTextView);
-        changeArrow = findViewById(R.id.changeArrow);
         changeTextView = findViewById(R.id.changeTextView);
         changePercentageTextView = findViewById(R.id.changePercentageTextView);
         lastUpdateTextView = findViewById(R.id.lastUpdateTextView);
+        lastUpdateBlock = findViewById(R.id.lastUpdateBlock);
 
-        // Apply night/day theme colors
+        // Apply font to all text views
+        applyFont();
+
+        // Apply night/day theme
         applyTheme();
 
         // Set fullscreen immersive sticky
         setImmersiveMode();
+
+        // Check aspect ratio and adjust layout
+        adjustLayoutForAspectRatio();
 
         // Touch listener - show dialog to return home
         rootLayout.setOnClickListener(v -> showBackToHomeDialog());
@@ -89,41 +124,63 @@ public class PriceActivity extends AppCompatActivity {
         startPriceUpdates();
     }
 
+    private void applyFont() {
+        // Apply Abril Fatface font to price-related text views
+        if (abrilFatfaceFont != null) {
+            clockTextView.setTypeface(abrilFatfaceFont);
+            priceTextView.setTypeface(abrilFatfaceFont);
+            currencyTextView.setTypeface(abrilFatfaceFont);
+            changeTextView.setTypeface(abrilFatfaceFont);
+            changePercentageTextView.setTypeface(abrilFatfaceFont);
+        }
+    }
+
     private void applyTheme() {
         if (nightMode) {
-            // Night mode colors from pricePageStyleNight.css
-            if (rootLayout != null) {
-                rootLayout.setBackgroundColor(Color.parseColor("#000000"));
-            }
-            if (clockTextView != null) {
-                clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            }
-            if (priceTextView != null) {
-                priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
-            }
-            if (currencyTextView != null) {
-                currencyTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            }
-            if (lastUpdateTextView != null) {
-                lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
-            }
+            // Night mode colors
+            rootLayout.setBackgroundColor(Color.parseColor("#000000"));
+            borderView.setVisibility(View.GONE);
+
+            clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
+            priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
+            currencyTextView.setTextColor(Color.parseColor("#6B6C6C"));
+            lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
+
+            // BTC text image is dimmed in night mode
+            btcTextImage.setAlpha(0.7f);
         } else {
-            // Day mode colors from pricePageStyle.css
-            if (rootLayout != null) {
-                rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            // Day mode colors
+            rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+            borderView.setVisibility(View.VISIBLE);
+
+            clockTextView.setTextColor(Color.parseColor("#000000"));
+            priceTextView.setTextColor(Color.parseColor("#000000"));
+            currencyTextView.setTextColor(Color.parseColor("#000000"));
+            lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
+
+            // Full opacity for BTC text in day mode
+            btcTextImage.setAlpha(1.0f);
+        }
+    }
+
+    private void adjustLayoutForAspectRatio() {
+        // Check if screen is wider (aspect ratio >= 16/8 = 2.0)
+        float aspectRatio = (float) screenWidth / screenHeight;
+
+        if (aspectRatio >= 2.0f) {
+            // Hide BTC text block on wider screens
+            btcTextBlock.setVisibility(View.GONE);
+
+            // Adjust last update block position for wider screens
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
+            if (nightMode) {
+                // Shift down in night mode
+                params.topMargin = (int) (screenHeight * 0.02f);
+            } else {
+                // Shift up in day mode
+                params.topMargin = (int) (-screenHeight * 0.01f);
             }
-            if (clockTextView != null) {
-                clockTextView.setTextColor(Color.parseColor("#000000"));
-            }
-            if (priceTextView != null) {
-                priceTextView.setTextColor(Color.parseColor("#000000"));
-            }
-            if (currencyTextView != null) {
-                currencyTextView.setTextColor(Color.parseColor("#000000"));
-            }
-            if (lastUpdateTextView != null) {
-                lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
-            }
+            lastUpdateBlock.setLayoutParams(params);
         }
     }
 
@@ -140,9 +197,7 @@ public class PriceActivity extends AppCompatActivity {
 
     private void showBackToHomeDialog() {
         // Exit immersive mode first so dialog is visible
-        if (rootLayout != null) {
-            rootLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        }
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Return to Home");
@@ -153,12 +208,10 @@ public class PriceActivity extends AppCompatActivity {
             finish();
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> {
-            // Return to immersive mode
             setImmersiveMode();
             dialog.dismiss();
         });
         builder.setOnCancelListener(dialog -> {
-            // Return to immersive mode
             setImmersiveMode();
             dialog.dismiss();
         });
@@ -181,11 +234,15 @@ public class PriceActivity extends AppCompatActivity {
         }, 0, 30000); // Update every 30 seconds
     }
 
-private void updateClock() {
-        if (clockTextView != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            clockTextView.setText(sdf.format(new Date()));
-        }
+    private void updateClock() {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        String timeStr = sdf.format(new Date());
+        // Add clock emoji/icon before time
+        clockTextView.setText("🕑" + timeStr);
+
+        // Set clock text size to 14vh
+        float clockSizeSp = (screenHeight * 0.14f) / density;
+        clockTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, clockSizeSp);
     }
 
     private void fetchBitcoinPrice() {
@@ -195,7 +252,7 @@ private void updateClock() {
                 JSONObject cachedData = null;
                 long currentTime = System.currentTimeMillis() / 1000;
                 long lastUpdate = 0;
-                
+
                 if (currentCurrency.equals("USD")) {
                     cachedData = cachedUsdData;
                     lastUpdate = usdLastUpdate;
@@ -203,13 +260,13 @@ private void updateClock() {
                     cachedData = cachedEurData;
                     lastUpdate = eurLastUpdate;
                 }
-                
+
                 // If we have cached data and it's not expired, use it
                 if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
                     updatePriceUI(cachedData);
                     return;
                 }
-                
+
                 // Otherwise fetch new data
                 String urlString = "https://api.exchange.coinbase.com/products/BTC-" + currentCurrency + "/stats";
                 URL url = new URL(urlString);
@@ -229,7 +286,7 @@ private void updateClock() {
                     in.close();
 
                     JSONObject json = new JSONObject(content.toString());
-                    
+
                     // Cache the data
                     if (currentCurrency.equals("USD")) {
                         cachedUsdData = json;
@@ -238,110 +295,125 @@ private void updateClock() {
                         cachedEurData = json;
                         eurLastUpdate = currentTime;
                     }
-                    
+
                     updatePriceUI(json);
                 } else {
-                    runOnUiThread(() -> {
-                        if (priceTextView != null) {
-                            priceTextView.setText("ERROR");
-                            changeTextView.setText("API Error");
-                            changePercentageTextView.setText("");
-                        }
-                    });
+                    runOnUiThread(() -> showError("COINBASE API"));
                 }
                 conn.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    if (priceTextView != null) {
-                        priceTextView.setText("ERROR");
-                        changeTextView.setText("Connection failed");
-                        changePercentageTextView.setText("");
-                    }
-                });
+                runOnUiThread(() -> showError("LOST CONNECTION"));
             }
         }).start();
     }
 
-private void updatePriceUI(JSONObject json) {
+    private void showError(String message) {
+        priceTextView.setText("ERROR");
+        changeTextView.setText(message);
+        changePercentageTextView.setText("");
+
+        // Error styling
+        priceTextView.setTextColor(Color.parseColor("#FAA31B"));
+        changeTextView.setTextColor(Color.parseColor("#FAA31B"));
+        changePercentageTextView.setTextColor(Color.parseColor("#FAA31B"));
+    }
+
+    private void updatePriceUI(JSONObject json) {
         try {
             // Parse the JSON response from Coinbase API
             double open = json.getDouble("open");
             double last = json.getDouble("last");
-            
+
             // Calculate price change values
             int actualPrice = (int) last;
             int priceChange = (int) (last - open);
-            
+
             // Format the price change percentage
             double changePercentage = ((last / open) - 1) * 100;
             String priceChangePercentage = String.format("%.2f", Math.abs(changePercentage));
-            
+
             // Format the currency symbol
-            String currencySymbol = currentCurrency;
-            if (currentCurrency.equals("USD")) {
-                currencySymbol = "$";
-            } else if (currentCurrency.equals("EUR")) {
-                currencySymbol = "€";
-            }
-            
+            String currencySymbol = currentCurrency.equals("USD") ? "$" : "€";
+
             // Final variables for use in inner class
             final String finalCurrencySymbol = currencySymbol;
             final int finalPriceChange = priceChange;
             final String finalPriceChangePercentage = priceChangePercentage;
             final int finalActualPrice = actualPrice;
-            
+            final boolean isPriceUp = finalPriceChange >= 0;
+
             // Update the UI elements
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     // Format price with commas
                     String priceString = String.format(Locale.US, "%,d", finalActualPrice);
-                    if (priceTextView != null) {
-                        priceTextView.setText(priceString);
-                        currencyTextView.setText(finalCurrencySymbol);
-                    }
-                    
-                    // Calculate change direction
-                    String arrow = finalPriceChange >= 0 ? "▲" : "▼";
+                    priceTextView.setText(priceString);
+                    currencyTextView.setText(finalCurrencySymbol);
+
+                    // Calculate dynamic font size for price
+                    int priceLength = priceString.length();
+                    float priceFontSize = calculateDynamicFontSize(priceLength, screenWidth);
+                    priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, priceFontSize);
+                    currencyTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, priceFontSize);
+
+                    // Calculate change direction and colors
+                    String arrow = isPriceUp ? "▲" : "▼";
                     int color;
-                    if (finalPriceChange >= 0) {
-                        color = nightMode ? Color.parseColor("#005e0d") : Color.parseColor("#4FC165");
+                    if (isPriceUp) {
+                        color = nightMode ? Color.parseColor("#005e0d") : Color.parseColor("#32CD32");
                     } else {
                         color = nightMode ? Color.parseColor("#966211") : Color.parseColor("#FAA31B");
                     }
-                    
-                    // Set the arrow symbol and color
-                    if (changeArrow != null) {
-                        changeArrow.setText(arrow);
-                        changeArrow.setTextColor(color);
-                    }
-                    
-                    // Set change text without arrow
-                    String changeText = String.format(Locale.US, "%s%,d %s", 
-                        finalPriceChange >= 0 ? "+" : "", Math.abs(finalPriceChange), finalCurrencySymbol);
-                    if (changeTextView != null) {
-                        changeTextView.setText(changeText);
-                    }
-                    
-                    // Set percentage text
-                    String changePercentageText = String.format(Locale.US, "%s%s%%", 
-                        finalPriceChange >= 0 ? "+" : "", finalPriceChangePercentage);
-                    if (changePercentageTextView != null) {
-                        changePercentageTextView.setText(changePercentageText);
-                        changePercentageTextView.setTextColor(color);
-                    }
-                    
+
+                    // Set change text with arrow: ▲ +123$
+                    String changeText = arrow + (isPriceUp ? "+" : "") + String.format(Locale.US, "%,d", Math.abs(finalPriceChange)) + finalCurrencySymbol;
+                    changeTextView.setText(changeText);
+                    changeTextView.setTextColor(color);
+
+                    // Set percentage text: ▲ +0.42%
+                    String changePercentageText = arrow + (isPriceUp ? "+" : "") + finalPriceChangePercentage + "%";
+                    changePercentageTextView.setText(changePercentageText);
+                    changePercentageTextView.setTextColor(color);
+
+                    // Set change text sizes to 15vh
+                    float changeSizeSp = (screenHeight * 0.15f) / density;
+                    changeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
+                    changePercentageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
+
                     // Update last update time
                     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-                    if (lastUpdateTextView != null) {
-                        lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
-                    }
+                    lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
+
+                    // Set last update text size to 3vh
+                    float updateSizeSp = (screenHeight * 0.03f) / density;
+                    lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Calculate dynamic font size based on text length to fit screen width
+     * Similar to the JavaScript: const charWidth = 0.59; const maxFontSize = 100 / (len * charWidth);
+     * Converted to pixels for Android
+     */
+    private float calculateDynamicFontSize(int charCount, int screenWidthPx) {
+        // Character width approximation for Abril Fatface
+        float charWidthRatio = 0.59f;
+
+        // Calculate max font size in pixels: screenWidth / (charCount * charWidth)
+        float maxFontSizePx = screenWidthPx / (charCount * charWidthRatio);
+
+        // Limit font size to reasonable bounds (max 70vh for price)
+        float maxFontSizeFromHeight = screenHeight * 0.7f;
+        float limitedSizePx = Math.min(maxFontSizePx, maxFontSizeFromHeight);
+
+        // Convert to SP
+        return limitedSizePx / density;
     }
 
     @Override
