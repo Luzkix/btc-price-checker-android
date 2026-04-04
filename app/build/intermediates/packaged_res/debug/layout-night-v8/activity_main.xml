@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_night"
+    android:padding="16dp">
+
+    <!-- Hodiny -->
+    <TextView
+        android:id="@+id/clockTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:textSize="48sp"
+        android:textColor="@color/text_secondary_night"
+        android:textStyle="bold"
+        android:gravity="end"
+        android:fontFamily="sans-serif" />
+
+    <!-- Bitcoin text -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BITCOIN"
+        android:textSize="24sp"
+        android:textColor="@color/bitcoin_orange"
+        android:textStyle="bold"
+        android:gravity="start"
+        android:layout_marginTop="16dp"
+        android:fontFamily="sans-serif" />
+
+    <!-- Cena -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/priceTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="96sp"
+            android:textColor="@color/text_primary_night"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif" />
+
+        <TextView
+            android:id="@+id/currencyTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$"
+            android:textSize="64sp"
+            android:textColor="@color/text_secondary_night"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif" />
+    </LinearLayout>
+
+    <!-- Změna ceny -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/priceChangeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+0$ (+0.00%)"
+            android:textSize="32sp"
+            android:textColor="@color/price_up_night"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif" />
+    </LinearLayout>
+
+    <!-- Čas poslední aktualizace -->
+    <TextView
+        android:id="@+id/lastUpdateTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Last update: 00:00:00 CET"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary_night"
+        android:gravity="end"
+        android:layout_marginTop="16dp"
+        android:fontFamily="sans-serif" />
+
+</LinearLayout>

@@ -1,0 +1,38 @@
+R_DEF: Internal format may change without notice
+local
+attr? currency
+attr? nightMode
+color background
+color background_night
+color bitcoin_orange
+color border
+color price_down
+color price_down_night
+color price_up
+color price_up_night
+color text_primary
+color text_primary_night
+color text_secondary
+color text_secondary_night
+dimen btc_text_size
+dimen change_text_size
+dimen clock_text_size
+dimen currency_text_size
+dimen padding_standard
+dimen price_text_size
+dimen update_text_size
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+id clockTextView
+id currencyTextView
+id lastUpdateTextView
+id priceChangeTextView
+id priceTextView
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+string eur_currency
+string usd_currency
+style Theme.BtcPriceChecker
+styleable BitcoinPriceView currency nightMode

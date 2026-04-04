@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/btc_orange</item>
+        <item name="colorPrimaryDark">@color/btc_orange</item>
+        <item name="colorAccent">@color/btc_orange</item>
+    </style>
+
+    <style name="FullScreenTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowBackground">@color/price_day_bg</item>
+    </style>
+</resources>

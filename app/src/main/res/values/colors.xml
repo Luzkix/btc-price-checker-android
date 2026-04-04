@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Homepage colors (from homepageStyle.css) -->
+    <color name="homepage_bg">#f8f9fa</color>
+    <color name="title_color">#1a1a2e</color>
+    <color name="subtitle_color">#6b7280</color>
+    <color name="description_color">#9ca3af</color>
+    <color name="section_label_color">#9ca3af</color>
+    <color name="card_bg">#ffffff</color>
+    <color name="card_border">#e5e7eb</color>
+    <color name="card_shadow">#04000000</color>
+    <color name="usd_symbol_color">#b8860b</color>
+    <color name="eur_symbol_color">#2563eb</color>
+    <color name="divider_line">#e5e7eb</color>
+    <color name="night_link_border">#e5e7eb</color>
+    <color name="night_link_text">#6b7280</color>
+    <color name="footer_color">#d1d5db</color>
+    <color name="btc_orange">#f7931a</color>
+
+    <!-- Price page day colors (from pricePageStyle.css) -->
+    <color name="price_day_bg">#FFFFFF</color>
+    <color name="clock_day_color">#000000</color>
+    <color name="price_day_color">#000000</color>
+    <color name="currency_day_color">#000000</color>
+    <color name="price_up_day">#32CD32</color>
+    <color name="price_down_day">#FAA31B</color>
+    <color name="last_update_day">#A9A9A9</color>
+
+    <!-- Price page night colors (from pricePageStyleNight.css) -->
+    <color name="price_night_bg">#000000</color>
+    <color name="clock_night_color">#6B6C6C</color>
+    <color name="price_night_color">#e7dfc6</color>
+    <color name="currency_night_color">#6B6C6C</color>
+    <color name="price_up_night">#005e0d</color>
+    <color name="price_down_night">#966211</color>
+    <color name="last_update_night">#292929</color>
+
+    <!-- Border color from CSS -->
+    <color name="page_border">#FAA31B</color>
+</resources>

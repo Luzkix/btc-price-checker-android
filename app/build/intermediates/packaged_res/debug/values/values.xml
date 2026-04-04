@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FFFFFF</color>
+    <color name="background_night">#000000</color>
+    <color name="bitcoin_orange">#F7931A</color>
+    <color name="border">#FAA31B</color>
+    <color name="price_down">#FF5252</color>
+    <color name="price_down_night">#966211</color>
+    <color name="price_up">#00C853</color>
+    <color name="price_up_night">#005E0D</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_primary_night">#E7DFC6</color>
+    <color name="text_secondary">#6B6C6C</color>
+    <color name="text_secondary_night">#6B6C6C</color>
+    <dimen name="btc_text_size">24sp</dimen>
+    <dimen name="change_text_size">32sp</dimen>
+    <dimen name="clock_text_size">48sp</dimen>
+    <dimen name="currency_text_size">64sp</dimen>
+    <dimen name="padding_standard">16dp</dimen>
+    <dimen name="price_text_size">96sp</dimen>
+    <dimen name="update_text_size">16sp</dimen>
+    <string name="app_name">BTC Price Checker</string>
+    <string name="eur_currency">EUR</string>
+    <string name="usd_currency">USD</string>
+    <style name="Theme.BtcPriceChecker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/bitcoin_orange</item>
+        <item name="colorPrimaryDark">@color/bitcoin_orange</item>
+        <item name="colorAccent">@color/bitcoin_orange</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/bitcoin_orange</item>
+    </style>
+    <declare-styleable name="BitcoinPriceView">
+        <attr format="string" name="currency"/>
+        <attr format="boolean" name="nightMode"/>
+    </declare-styleable>
+</resources>
