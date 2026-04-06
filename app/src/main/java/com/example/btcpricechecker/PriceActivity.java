@@ -264,7 +264,7 @@ public class PriceActivity extends AppCompatActivity {
         // Tablet layout (aspect ratio <= 1.6):
         // - 50% wider border (handled by day_border_tablet.xml - 15dp instead of 10dp)
         // - Clock: same top/right padding (3vw right, matching top padding)
-        // - Last price info: smaller text, centered vertically in border area
+        // - Last price info: positioned in XML with proper margins
 
         // BTC text: padding-left: 4vw
         if (btcTextBlock != null) {
@@ -280,26 +280,14 @@ public class PriceActivity extends AppCompatActivity {
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
 
-        // Last update block: inside border, smaller text, vertically centered
-        if (lastUpdateBlock != null) {
-            // Note: lastUpdateBlock is now inside a FrameLayout (lastUpdateBlockContainer)
-            // so we need to use FrameLayout.LayoutParams
-            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
-            // Position at bottom with small margin
-            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
-            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
-            lastUpdateBlock.setLayoutParams(lastUpdateParams);
-
-            // Smaller text size
-            float updateSizeSp = (screenHeight * 0.025f) / density;
-            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
-        }
+        // Last update block: positioned in XML with proper margins for 15dp border
+        // Margins are already set in activity_price_tablet.xml
     }
 
     private void applyWideLayout() {
         // Wide layout (1.6 < aspect ratio <= 1.9):
         // - Clock: same top/right padding (3vw right, matching top padding)
-        // - Last price info: smaller text, centered vertically in border area
+        // - Last price info: positioned in XML with proper margins
 
         // BTC text: padding-left: 4vw
         if (btcTextBlock != null) {
@@ -315,38 +303,23 @@ public class PriceActivity extends AppCompatActivity {
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
 
-        // Last update block: inside border, smaller text, vertically centered
-        if (lastUpdateBlock != null) {
-            // Note: lastUpdateBlock is inside a FrameLayout (lastUpdateBlockContainer)
-            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
-            // Position at bottom with small margin
-            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
-            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
-            lastUpdateBlock.setLayoutParams(lastUpdateParams);
-
-            // Smaller text size
-            float updateSizeSp = (screenHeight * 0.025f) / density;
-            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
-        }
+        // Last update block: positioned in XML with proper margins for 10dp border
+        // Margins are already set in activity_price_wide.xml
     }
 
     private void applyUltraWideLayout() {
         // Ultra-wide layout (aspect ratio > 1.9):
         // - Bitcoin logo on same row as clock (space-between)
-        // - Clock: same top/right padding
-        // - Last price info: smaller text
+        // - Clock: same top/right/left padding (3vw)
+        // - Last price info: properly positioned inside border
 
         // BTC text block is already hidden in XML (visibility="gone")
 
         // Setup bitcoin logo if present
         if (btcLogoImage != null && clockBlock != null) {
-            // Size logo to match clock height
-            float clockSizeSp = (screenHeight * 0.14f) / density;
-            float clockSizePx = clockSizeSp * density;
-
-            // Set logo size (slightly smaller than clock height to fit)
+            // Set logo to match clock height using match_parent
             LinearLayout.LayoutParams logoParams = (LinearLayout.LayoutParams) btcLogoImage.getLayoutParams();
-            logoParams.height = (int) (clockSizePx * 0.9f); // 90% of clock height
+            logoParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
             logoParams.width = LinearLayout.LayoutParams.WRAP_CONTENT;
             btcLogoImage.setLayoutParams(logoParams);
 
@@ -356,17 +329,11 @@ public class PriceActivity extends AppCompatActivity {
             clockBlock.setPadding(horizontalPadding, topPadding, horizontalPadding, 0);
         }
 
-    // Last update block
+        // Last update block - already positioned in XML with margins
         if (lastUpdateBlock != null) {
             // Note: lastUpdateBlock is inside a FrameLayout (lastUpdateBlockContainer)
-            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
-            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
-            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
-            lastUpdateBlock.setLayoutParams(lastUpdateParams);
-
-            // Smaller text size
-            float updateSizeSp = (screenHeight * 0.025f) / density;
-            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
+            // Margins are set in XML to match border width
+            // Text size is set programmatically based on screen dimensions
         }
     }
 
@@ -605,9 +572,7 @@ public class PriceActivity extends AppCompatActivity {
                     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
                     lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
 
-                    // Set last update text size to 3vh
-                    float updateSizeSp = (screenHeight * 0.03f) / density;
-                    lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
+                    // Note: Text size is defined in XML layouts (8sp) for consistent appearance across devices
                 }
             });
         } catch (Exception e) {

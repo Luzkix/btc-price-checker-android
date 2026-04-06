@@ -137,36 +137,39 @@
 
         </LinearLayout>
 
-        <!-- Last Update Section - positioned at bottom inside border -->
-        <FrameLayout
-            android:id="@+id/lastUpdateBlockContainer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="4">
+    <!-- Last Update Section - positioned at bottom inside border -->
+    <FrameLayout
+        android:id="@+id/lastUpdateBlockContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4">
 
-            <LinearLayout
-                android:id="@+id/lastUpdateBlock"
+        <LinearLayout
+            android:id="@+id/lastUpdateBlock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|end"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal"
+            android:gravity="center|end"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <TextView
+                android:id="@+id/lastUpdateTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center|end"
-                android:orientation="horizontal"
-                android:clipChildren="false"
-                android:clipToPadding="false">
+                android:text="Last price info: 00:00:00 CET"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/last_update_day"
+                android:fontFamily="sans-serif"
+                android:includeFontPadding="false" />
 
-                <TextView
-                    android:id="@+id/lastUpdateTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Last price info: 00:00:00 CET"
-                    android:textSize="2sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/last_update_day"
-                    android:fontFamily="sans-serif"
-                    android:includeFontPadding="false" />
+        </LinearLayout>
 
-            </LinearLayout>
-
-        </FrameLayout>
+    </FrameLayout>
 
     </LinearLayout>
 
