@@ -82,7 +82,7 @@ public class PriceActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_price);
 
-        // Get screen dimensions
+        // Get initial screen dimensions (will be updated to actual fullscreen dimensions later)
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         screenHeight = metrics.heightPixels;
         screenWidth = metrics.widthPixels;
@@ -121,8 +121,11 @@ public class PriceActivity extends AppCompatActivity {
         // Set fullscreen immersive sticky
         setImmersiveMode();
 
-        // Check aspect ratio and adjust layout
-        adjustLayoutForAspectRatio();
+        // Wait for layout to be fully drawn before calculating dimensions
+        rootLayout.post(() -> {
+            // Check aspect ratio and adjust layout
+            adjustLayoutForAspectRatio();
+        });
 
         // Touch listener - show dialog to return home
         rootLayout.setOnClickListener(v -> showBackToHomeDialog());
@@ -171,8 +174,27 @@ public class PriceActivity extends AppCompatActivity {
     }
 
     private void adjustLayoutForAspectRatio() {
-        // Check if screen is wider (aspect ratio >= 16/8 = 2.0)
-        float aspectRatio = (float) screenWidth / screenHeight;
+        // Get REAL screen dimensions (physical screen size, not window size)
+        // This is crucial because aspect ratio must be calculated from physical screen,
+        // not from window which may have different sizes depending on system bars
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+        int actualWidth = metrics.widthPixels;
+        int actualHeight = metrics.heightPixels;
+        float actualDensity = metrics.density;
+
+        // Update stored values
+        screenWidth = actualWidth;
+        screenHeight = actualHeight;
+        density = actualDensity;
+
+        // Log dimensions for debugging
+        android.util.Log.d("PriceActivity", "Real screen dimensions: " + actualWidth + "x" + actualHeight + 
+            ", aspect ratio: " + ((float) actualWidth / actualHeight));
+        
+        // Check if screen is wider (aspect ratio >= 1.95)
+        // Use real screen aspect ratio, not window aspect ratio
+        float aspectRatio = (float) actualWidth / actualHeight;
 
         // Apply layout margins based on original CSS specs
         // BTC text: padding-left: 4vw
@@ -198,7 +220,7 @@ public class PriceActivity extends AppCompatActivity {
         lastUpdateParams.bottomMargin = (int) (screenHeight * 0.01f); // Small offset
         lastUpdateBlock.setLayoutParams(lastUpdateParams);
 
-        if (aspectRatio >= 1.95f) {
+        if (aspectRatio >= 2.00f) {
             // Hide BTC text block on wider screens
             btcTextBlock.setVisibility(View.GONE);
 
