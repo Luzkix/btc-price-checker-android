@@ -22,19 +22,19 @@
         android:orientation="vertical"
         android:padding="0dp">
 
-        <!-- Empty space for clock (15vh) - clocks will be overlaid on top -->
-        <View
-            android:id="@+id/clockSpacer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="15" />
+    <!-- Empty space for clock (13vh) - clocks will be overlaid on top -->
+    <View
+        android:id="@+id/clockSpacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="13" />
 
-        <!-- BTC Text Section - Logo - HIDDEN on ultra-wide screens -->
-        <LinearLayout
-            android:id="@+id/btcTextBlock"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="15"
+    <!-- BTC Text Section - Logo - HIDDEN on ultra-wide screens -->
+    <LinearLayout
+        android:id="@+id/btcTextBlock"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="9"
             android:orientation="horizontal"
             android:gravity="start|center_vertical"
             android:paddingStart="0dp"
@@ -53,44 +53,44 @@
 
         </LinearLayout>
 
-        <!-- Price Container -->
-        <FrameLayout
-            android:id="@+id/priceContainer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="49"
-            android:clipChildren="false"
-            android:clipToPadding="false">
+    <!-- Price Container -->
+    <FrameLayout
+        android:id="@+id/priceContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="55"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-            <!-- Single TextView for price + currency to ensure currency always shows -->
-            <TextView
-                android:id="@+id/priceTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="0$"
-                android:textStyle="bold"
-                android:fontFamily="@font/abril_fatface"
-                android:textColor="@color/price_day_color"
-                android:includeFontPadding="false"
-                android:singleLine="true" />
+        <!-- Single TextView for price + currency to ensure currency always shows -->
+        <TextView
+            android:id="@+id/priceTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="0$"
+            android:textStyle="bold"
+            android:fontFamily="@font/abril_fatface"
+            android:textColor="@color/price_day_color"
+            android:includeFontPadding="false"
+            android:singleLine="true" />
 
-            <!-- Hidden TextView just for currency color reference (will be updated in code) -->
-            <TextView
-                android:id="@+id/currencyTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:text="$" />
+        <!-- Hidden TextView just for currency color reference (will be updated in code) -->
+        <TextView
+            android:id="@+id/currencyTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="$" />
 
-        </FrameLayout>
+    </FrameLayout>
 
-        <!-- Price Change Section -->
-        <LinearLayout
-            android:id="@+id/changeBlock"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="17"
+    <!-- Price Change Section -->
+    <LinearLayout
+        android:id="@+id/changeBlock"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="16"
             android:orientation="horizontal"
             android:gravity="center"
             android:paddingStart="16dp"
@@ -143,7 +143,7 @@
         android:id="@+id/lastUpdateBlockContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4">
+        android:layout_weight="7">
 
         <LinearLayout
             android:id="@+id/lastUpdateBlock"
