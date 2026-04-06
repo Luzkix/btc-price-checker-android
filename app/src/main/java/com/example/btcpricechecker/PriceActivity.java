@@ -314,9 +314,13 @@ public class PriceActivity extends AppCompatActivity {
 
         // Setup bitcoin logo if present
         if (btcLogoImage != null && clockBlock != null) {
-            // Set logo to match clock height using match_parent
+            // Set logo height to match clock height exactly (100%)
+            float clockSizeSp = (screenHeight * 0.14f) / density;
+            float clockSizePx = clockSizeSp * density;
+            int logoHeight = (int) clockSizePx; // 100% of clock height
+
             LinearLayout.LayoutParams logoParams = (LinearLayout.LayoutParams) btcLogoImage.getLayoutParams();
-            logoParams.height = LinearLayout.LayoutParams.MATCH_PARENT;
+            logoParams.height = logoHeight;
             logoParams.width = LinearLayout.LayoutParams.WRAP_CONTENT;
             btcLogoImage.setLayoutParams(logoParams);
 
