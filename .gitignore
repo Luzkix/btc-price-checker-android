@@ -91,3 +91,8 @@ Thumbs.db
 # Backup files
 *.bak
 *.orig
+
+# Eclipse / Buildship files
+.classpath
+.project
+.settings/

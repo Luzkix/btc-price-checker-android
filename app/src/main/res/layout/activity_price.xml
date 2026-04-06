@@ -109,19 +109,33 @@
                 android:gravity="center"
                 android:singleLine="true" />
 
-            <TextView
-                android:id="@+id/changePercentageTextView"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="▲0.00%"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/abril_fatface"
-                android:gravity="center"
-                android:singleLine="true" />
+    <TextView
+        android:id="@+id/changePercentageTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="▲0.00%"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/abril_fatface"
+        android:gravity="center"
+        android:singleLine="true" />
 
-        </LinearLayout>
+    <!-- Error message TextView - replaces change views when error occurs -->
+    <TextView
+        android:id="@+id/errorMessageTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text=""
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/abril_fatface"
+        android:gravity="center"
+        android:visibility="gone"
+        android:singleLine="true" />
+
+</LinearLayout>
 
         <!-- Last Update Section -->
         <LinearLayout

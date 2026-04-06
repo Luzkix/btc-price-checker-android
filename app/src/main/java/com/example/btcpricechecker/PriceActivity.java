@@ -63,6 +63,9 @@ public class PriceActivity extends AppCompatActivity {
     private int screenWidth;
     private float density;
 
+    // Error message TextView
+    private TextView errorMessageTextView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,6 +108,7 @@ public class PriceActivity extends AppCompatActivity {
         currencyTextView = findViewById(R.id.currencyTextView);
         changeTextView = findViewById(R.id.changeTextView);
         changePercentageTextView = findViewById(R.id.changePercentageTextView);
+        errorMessageTextView = findViewById(R.id.errorMessageTextView);
         lastUpdateTextView = findViewById(R.id.lastUpdateTextView);
         lastUpdateBlock = findViewById(R.id.lastUpdateBlock);
 
@@ -194,7 +198,7 @@ public class PriceActivity extends AppCompatActivity {
         lastUpdateParams.bottomMargin = (int) (screenHeight * 0.01f); // Small offset
         lastUpdateBlock.setLayoutParams(lastUpdateParams);
 
-        if (aspectRatio >= 2.0f) {
+        if (aspectRatio >= 1.95f) {
             // Hide BTC text block on wider screens
             btcTextBlock.setVisibility(View.GONE);
 
@@ -336,14 +340,33 @@ public class PriceActivity extends AppCompatActivity {
     }
 
     private void showError(String message) {
-        priceTextView.setText("ERROR");
-        changeTextView.setText(message);
-        changePercentageTextView.setText("");
+        runOnUiThread(() -> {
+            // Set ERROR as price
+            priceTextView.setText("ERROR");
 
-        // Error styling
-        priceTextView.setTextColor(Color.parseColor("#FAA31B"));
-        changeTextView.setTextColor(Color.parseColor("#FAA31B"));
-        changePercentageTextView.setTextColor(Color.parseColor("#FAA31B"));
+            // Hide change views, show error message
+            changeTextView.setVisibility(View.GONE);
+            changePercentageTextView.setVisibility(View.GONE);
+            errorMessageTextView.setVisibility(View.VISIBLE);
+
+            // Set error message text with proper size (15vh)
+            errorMessageTextView.setText(message);
+            float changeSizeSp = (screenHeight * 0.15f) / density;
+            errorMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
+
+            // Set colors based on theme
+            if (nightMode) {
+                // ERROR - same color as price in night mode
+                priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
+                // LOST CONNECTION - color for price down in night mode
+                errorMessageTextView.setTextColor(Color.parseColor("#966211"));
+            } else {
+                // ERROR - same color as price in day mode
+                priceTextView.setTextColor(Color.parseColor("#000000"));
+                // LOST CONNECTION - color for price down in day mode
+                errorMessageTextView.setTextColor(Color.parseColor("#FAA31B"));
+            }
+        });
     }
 
     private void updatePriceUI(JSONObject json) {
@@ -372,12 +395,24 @@ public class PriceActivity extends AppCompatActivity {
 
             // Update the UI elements
             runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Format price with commas and add currency symbol
-                    String priceString = String.format(Locale.US, "%,d", finalActualPrice);
-                    String priceWithCurrency = priceString + finalCurrencySymbol;
-                    priceTextView.setText(priceWithCurrency);
+                    @Override
+                    public void run() {
+                        // Restore visibility: hide error message, show change views
+                        errorMessageTextView.setVisibility(View.GONE);
+                        changeTextView.setVisibility(View.VISIBLE);
+                        changePercentageTextView.setVisibility(View.VISIBLE);
+
+                        // Restore price text color based on theme
+                        if (nightMode) {
+                            priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
+                        } else {
+                            priceTextView.setTextColor(Color.parseColor("#000000"));
+                        }
+
+                        // Format price with commas and add currency symbol
+                        String priceString = String.format(Locale.US, "%,d", finalActualPrice);
+                        String priceWithCurrency = priceString + finalCurrencySymbol;
+                        priceTextView.setText(priceWithCurrency);
 
                     // Currency is now part of price text, so hide the separate currency view
                     currencyTextView.setVisibility(View.GONE);
