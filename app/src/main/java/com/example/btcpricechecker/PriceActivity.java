@@ -213,7 +213,7 @@ public class PriceActivity extends AppCompatActivity {
             clockTextView.setTextColor(Color.parseColor("#000000"));
             priceTextView.setTextColor(Color.parseColor("#000000"));
             currencyTextView.setTextColor(Color.parseColor("#000000"));
-            lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
+            lastUpdateTextView.setTextColor(Color.parseColor("#FFFFFF"));
 
             // Full opacity for BTC text in day mode
             if (btcTextImage != null) {

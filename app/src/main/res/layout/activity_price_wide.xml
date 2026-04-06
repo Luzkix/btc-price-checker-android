@@ -137,7 +137,7 @@
 
         </LinearLayout>
 
-    <!-- Last Update Section - positioned at bottom inside border -->
+    <!-- Last Update Section - positioned directly in the orange border area -->
     <FrameLayout
         android:id="@+id/lastUpdateBlockContainer"
         android:layout_width="match_parent"
@@ -147,12 +147,12 @@
         <LinearLayout
             android:id="@+id/lastUpdateBlock"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center|end"
+            android:layout_height="10dp"
+            android:layout_gravity="bottom|end"
             android:layout_marginEnd="10dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="0dp"
             android:orientation="horizontal"
-            android:gravity="center|end"
+            android:gravity="center_vertical|end"
             android:clipChildren="false"
             android:clipToPadding="false">
 
@@ -161,7 +161,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Last price info: 00:00:00 CET"
-                android:textSize="8sp"
+                android:textSize="9sp"
                 android:textStyle="bold"
                 android:textColor="@color/last_update_day"
                 android:fontFamily="sans-serif"
