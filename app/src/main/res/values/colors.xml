@@ -4,21 +4,23 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
 
-    <!-- Homepage colors (from homepageStyle.css) -->
-    <color name="homepage_bg">#f8f9fa</color>
-    <color name="title_color">#1a1a2e</color>
-    <color name="subtitle_color">#6b7280</color>
-    <color name="description_color">#9ca3af</color>
-    <color name="section_label_color">#9ca3af</color>
-    <color name="card_bg">#ffffff</color>
-    <color name="card_border">#e5e7eb</color>
-    <color name="card_shadow">#04000000</color>
-    <color name="usd_symbol_color">#b8860b</color>
-    <color name="eur_symbol_color">#2563eb</color>
-    <color name="divider_line">#e5e7eb</color>
-    <color name="night_link_border">#e5e7eb</color>
-    <color name="night_link_text">#6b7280</color>
-    <color name="footer_color">#d1d5db</color>
+    <!-- Homepage colors - optimized for e-ink displays -->
+    <color name="homepage_bg">#FFFFFF</color>
+    <color name="title_color">#000000</color>
+    <color name="subtitle_color">#000000</color>
+    <color name="description_color">#000000</color>
+    <color name="section_label_color">#000000</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_border">#000000</color>
+    <color name="card_border_usd">#b8860b</color>
+    <color name="card_border_eur">#2563eb</color>
+    <color name="card_shadow">#000000</color>
+    <color name="usd_symbol_color">#000000</color>
+    <color name="eur_symbol_color">#000000</color>
+    <color name="divider_line">#000000</color>
+    <color name="night_link_border">#000000</color>
+    <color name="night_link_text">#000000</color>
+    <color name="footer_color">#000000</color>
     <color name="btc_orange">#f7931a</color>
 
     <!-- Price page day colors (from pricePageStyle.css) -->
