@@ -163,9 +163,6 @@ public class PriceActivity extends AppCompatActivity {
             adjustLayoutForAspectRatio();
         });
 
-        // Touch listener - show dialog to return home
-        rootLayout.setOnClickListener(v -> showBackToHomeDialog());
-
         // Start price updates
         startPriceUpdates();
     }
@@ -346,29 +343,6 @@ public class PriceActivity extends AppCompatActivity {
             | View.SYSTEM_UI_FLAG_FULLSCREEN
             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         );
-    }
-
-    private void showBackToHomeDialog() {
-        // Exit immersive mode first so dialog is visible
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Return to Home");
-        builder.setMessage("Do you want to go back to the homepage?");
-        builder.setPositiveButton("Yes", (dialog, which) -> {
-            Intent intent = new Intent(PriceActivity.this, HomeActivity.class);
-            startActivity(intent);
-            finish();
-        });
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
-            setImmersiveMode();
-            dialog.dismiss();
-        });
-        builder.setOnCancelListener(dialog -> {
-            setImmersiveMode();
-            dialog.dismiss();
-        });
-        builder.show();
     }
 
     private void startPriceUpdates() {
