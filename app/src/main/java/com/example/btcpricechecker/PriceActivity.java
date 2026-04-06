@@ -3,6 +3,8 @@ package com.example.btcpricechecker;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -65,16 +67,20 @@ public class PriceActivity extends AppCompatActivity {
     private int screenWidth;
     private float density;
 
-    // Error message TextView
-    private TextView errorMessageTextView;
+// Error message TextView
+private TextView errorMessageTextView;
 
-    // Aspect ratio category
-    private enum AspectRatioCategory {
-        TABLET,      // <= 1.6
-        WIDE,        // > 1.6 && <= 1.9
-        ULTRAWIDE    // > 1.9
-    }
-    private AspectRatioCategory aspectRatioCategory;
+// Font size caching variables
+private int cachedDigitCount = -1; // -1 = not calculated yet
+private float cachedFontSizeSp = -1f; // cached font size in SP
+
+// Aspect ratio category
+private enum AspectRatioCategory {
+    TABLET, // <= 1.6
+    WIDE, // > 1.6 && <= 1.9
+    ULTRAWIDE // > 1.9
+}
+private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // Default fallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,11 +120,11 @@ public class PriceActivity extends AppCompatActivity {
 
         setContentView(layoutRes);
 
-        // Get initial screen dimensions (will be updated to actual fullscreen dimensions later)
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        screenHeight = metrics.heightPixels;
-        screenWidth = metrics.widthPixels;
-        density = metrics.density;
+        // Use the REAL screen dimensions we already obtained before setContentView
+        // These are already fullscreen values, no need to get them again
+        screenWidth = actualWidth;
+        screenHeight = actualHeight;
+        density = realMetrics.density;
 
         // Load font
         abrilFatfaceFont = ResourcesCompat.getFont(this, R.font.abril_fatface);
@@ -238,6 +244,11 @@ public class PriceActivity extends AppCompatActivity {
         screenWidth = actualWidth;
         screenHeight = actualHeight;
         density = actualDensity;
+
+        // Invalidate font size cache when screen dimensions change
+        // This ensures font is recalculated for the actual available width
+        cachedDigitCount = -1;
+        cachedFontSizeSp = -1f;
 
         // Log dimensions for debugging
         android.util.Log.d("PriceActivity", "Real screen dimensions: " + actualWidth + "x" + actualHeight +
@@ -514,13 +525,20 @@ public class PriceActivity extends AppCompatActivity {
                         String priceWithCurrency = priceString + finalCurrencySymbol;
                         priceTextView.setText(priceWithCurrency);
 
-                    // Currency is now part of price text, so hide the separate currency view
-                    currencyTextView.setVisibility(View.GONE);
+                        // Currency is now part of price text, so hide the separate currency view
+                        currencyTextView.setVisibility(View.GONE);
 
-                    // Calculate dynamic font size based on total text length (price + currency symbol)
-                    int totalLength = priceWithCurrency.length();
-                    float priceFontSize = calculateDynamicFontSize(totalLength, screenWidth);
-                    priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, priceFontSize);
+                        // Defer font size calculation until view is measured
+                        priceTextView.post(() -> {
+                            int currentDigitCount = String.valueOf(finalActualPrice).length();
+                            // Only recalculate font size when digit count changes (price crosses 10K, 100K, etc.)
+                            if (currentDigitCount != cachedDigitCount) {
+                                cachedDigitCount = currentDigitCount;
+                                int availableWidth = getAvailableWidthForPriceText();
+                                cachedFontSizeSp = calculateMaxFontSizeForDigitCount(currentDigitCount, availableWidth);
+                            }
+                            priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, cachedFontSizeSp);
+                        });
 
                     // Calculate change direction and colors
                     String arrow = isPriceUp ? "▲" : "▼";
@@ -559,31 +577,88 @@ public class PriceActivity extends AppCompatActivity {
     }
 
     /**
-     * Calculate dynamic font size based on text length to fit screen width
-     * Similar to the JavaScript: const charWidth = 0.59; const maxFontSize = 100 / (len * charWidth);
-     * The original web version uses viewport width units (vw)
-     * We convert to Android SP units
+     * Calculate maximum font size that fits the price text using binary search.
+     * Uses actual measurement with Paint to ensure text never overflows.
+     * @param digitCount number of digits before decimal point in price
+     * @param availableWidthPx available width in pixels for the text
+     * @return maximum font size in SP units
      */
-    private float calculateDynamicFontSize(int charCount, int screenWidthPx) {
-        // Character width approximation for Abril Fatface
-        // This is slightly wider than average to ensure text fits
-        float charWidthRatio = 0.62f;
+    private float calculateMaxFontSizeForDigitCount(int digitCount, int availableWidthPx) {
+        // Build "worst case" text - all 9s to account for widest digits
+        StringBuilder worstCasePrice = new StringBuilder();
+        for (int i = 0; i < digitCount; i++) {
+            worstCasePrice.append('9');
+        }
+        // Insert commas for thousands separators (e.g., 999999 -> 999,999)
+        if (digitCount > 3) {
+            worstCasePrice.insert(digitCount - 3, ',');
+        }
+        worstCasePrice.append('$');
 
-        // Calculate max font size in vw units (viewport width percentage)
-        // Formula from original: maxFontSize = 100 / (len * charWidth)
-        float maxFontSizeVw = 100f / (charCount * charWidthRatio);
+        String worstCaseText = worstCasePrice.toString();
 
-        // Convert vw to pixels: (screenWidth * percentage) / 100
-        float maxFontSizePx = (screenWidthPx * maxFontSizeVw) / 100f;
+        android.util.Log.d("PriceActivity", "Calculating font size for digitCount=" + digitCount +
+            ", worstCaseText='" + worstCaseText + "', availableWidth=" + availableWidthPx +
+            ", screenHeight=" + screenHeight + ", density=" + density);
 
-        // Limit font size to max 60vh (leave some room for padding)
-        float maxFontSizeFromHeight = screenHeight * 0.60f;
+        // Create Paint object with Abril Fatface font for measurement
+        Paint paint = new Paint();
+        paint.setTypeface(abrilFatfaceFont);
+        paint.setAntiAlias(true);
 
-        // Take the smaller of the two to ensure text fits both width and height
-        float limitedSizePx = Math.min(maxFontSizePx, maxFontSizeFromHeight);
+        // Binary search for maximum font size
+        float lowSizePx = 1f; // Start with 1px
+        float highSizePx = screenHeight * 0.70f; // Max 70% of screen height
+        float bestSizePx = lowSizePx;
 
-        // Convert to SP (taking into account screen density)
-        return limitedSizePx / density;
+        Rect textBounds = new Rect();
+
+        // Binary search with 25 iterations for precision
+        for (int i = 0; i < 25; i++) {
+            float midSizePx = (lowSizePx + highSizePx) / 2f;
+            paint.setTextSize(midSizePx);
+            paint.getTextBounds(worstCaseText, 0, worstCaseText.length(), textBounds);
+
+            float measuredWidth = textBounds.width();
+
+            if (measuredWidth <= availableWidthPx) {
+                // This size fits, try larger
+                bestSizePx = midSizePx;
+                lowSizePx = midSizePx;
+            } else {
+                // This size is too big, try smaller
+                highSizePx = midSizePx;
+            }
+        }
+
+        android.util.Log.d("PriceActivity", "Before margins: bestSizePx=" + bestSizePx);
+
+        // Add small safety margin (95% of calculated size)
+        bestSizePx *= 0.95f;
+
+        // Limit to max 60vh (leave room for other UI elements)
+        float maxSizeFromHeight = screenHeight * 0.60f;
+        bestSizePx = Math.min(bestSizePx, maxSizeFromHeight);
+
+        android.util.Log.d("PriceActivity", "Final font size: " + (bestSizePx / density) + "sp");
+
+        // Convert pixels to SP units
+        return bestSizePx / density;
+    }
+
+    /**
+     * Get available width for price text considering screen width, padding and margins.
+     * This gives the actual width that text can occupy.
+     */
+    private int getAvailableWidthForPriceText() {
+        // Use real screen width with minimal 5% safety margin
+        // Border is handled by the layout margins, not subtracted here
+        int availableWidth = (int) (screenWidth * 0.95f); // 5% safety margin
+
+        android.util.Log.d("PriceActivity", "getAvailableWidth: screenWidth=" + screenWidth +
+            ", available=" + availableWidth + " (95% of screen)");
+
+        return Math.max(availableWidth, 300); // Minimum 300px fallback
     }
 
     @Override
