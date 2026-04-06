@@ -273,9 +273,9 @@ public class PriceActivity extends AppCompatActivity {
             btcTextBlock.setLayoutParams(btcParams);
         }
 
-        // Clock block: same padding from top and right (3vw right, 3vw top)
+        // Clock block: reduced top padding (1.5vw instead of 3vw)
         if (clockBlock != null) {
-            int topPadding = (int) (screenWidth * 0.03f); // 3vw from top (same as right)
+            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
             int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
@@ -286,7 +286,7 @@ public class PriceActivity extends AppCompatActivity {
 
     private void applyWideLayout() {
         // Wide layout (1.6 < aspect ratio <= 1.9):
-        // - Clock: same top/right padding (3vw right, matching top padding)
+        // - Clock: reduced top padding (1.5vw), right padding unchanged
         // - Last price info: positioned in XML with proper margins
 
         // BTC text: padding-left: 4vw
@@ -296,9 +296,9 @@ public class PriceActivity extends AppCompatActivity {
             btcTextBlock.setLayoutParams(btcParams);
         }
 
-        // Clock block: same padding from top and right (3vw right, 3vw top)
+        // Clock block: reduced top padding (1.5vw instead of 3vw)
         if (clockBlock != null) {
-            int topPadding = (int) (screenWidth * 0.03f); // 3vw from top (same as right)
+            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
             int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
@@ -310,7 +310,7 @@ public class PriceActivity extends AppCompatActivity {
     private void applyUltraWideLayout() {
         // Ultra-wide layout (aspect ratio > 1.9):
         // - Bitcoin logo on same row as clock (space-between)
-        // - Clock: same top/right/left padding (3vw)
+        // - Clock: reduced top padding (1.5vw), horizontal padding unchanged (3vw)
         // - Last price info: properly positioned inside border
 
         // BTC text block is already hidden in XML (visibility="gone")
@@ -323,9 +323,9 @@ public class PriceActivity extends AppCompatActivity {
             logoParams.width = LinearLayout.LayoutParams.WRAP_CONTENT;
             btcLogoImage.setLayoutParams(logoParams);
 
-            // Set padding for clock block (3vw top, 3vw right, 3vw left for logo)
+            // Set padding for clock block (1.5vw top, 3vw horizontal)
             int horizontalPadding = (int) (screenWidth * 0.03f);
-            int topPadding = (int) (screenWidth * 0.03f); // same as horizontal
+            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
             clockBlock.setPadding(horizontalPadding, topPadding, horizontalPadding, 0);
         }
 
