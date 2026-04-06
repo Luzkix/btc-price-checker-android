@@ -47,6 +47,7 @@ public class PriceActivity extends AppCompatActivity {
     private View borderView;
     private TextView clockTextView;
     private ImageView btcTextImage;
+    private ImageView btcLogoImage; // For ultra-wide layout
     private LinearLayout btcTextBlock;
     private TextView priceTextView;
     private TextView currencyTextView;
@@ -54,6 +55,7 @@ public class PriceActivity extends AppCompatActivity {
     private TextView changePercentageTextView;
     private TextView lastUpdateTextView;
     private LinearLayout lastUpdateBlock;
+    private LinearLayout clockBlock;
 
     // Font
     private Typeface abrilFatfaceFont;
@@ -65,6 +67,14 @@ public class PriceActivity extends AppCompatActivity {
 
     // Error message TextView
     private TextView errorMessageTextView;
+
+    // Aspect ratio category
+    private enum AspectRatioCategory {
+        TABLET,      // <= 1.6
+        WIDE,        // > 1.6 && <= 1.9
+        ULTRAWIDE    // > 1.9
+    }
+    private AspectRatioCategory aspectRatioCategory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +90,29 @@ public class PriceActivity extends AppCompatActivity {
         // Keep screen on - prevent screen from turning off
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        setContentView(R.layout.activity_price);
+        // Get REAL screen dimensions BEFORE setting content view to determine layout
+        DisplayMetrics realMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(realMetrics);
+        int actualWidth = realMetrics.widthPixels;
+        int actualHeight = realMetrics.heightPixels;
+        float aspectRatio = (float) actualWidth / actualHeight;
+
+        // Determine aspect ratio category and select appropriate layout
+        int layoutRes;
+        if (aspectRatio <= 1.6f) {
+            aspectRatioCategory = AspectRatioCategory.TABLET;
+            layoutRes = R.layout.activity_price_tablet;
+        } else if (aspectRatio <= 1.9f) {
+            aspectRatioCategory = AspectRatioCategory.WIDE;
+            layoutRes = R.layout.activity_price_wide;
+        } else {
+            aspectRatioCategory = AspectRatioCategory.ULTRAWIDE;
+            layoutRes = R.layout.activity_price_ultrawide;
+        }
+
+        android.util.Log.d("PriceActivity", "Aspect ratio: " + aspectRatio + ", selected layout: " + aspectRatioCategory);
+
+        setContentView(layoutRes);
 
         // Get initial screen dimensions (will be updated to actual fullscreen dimensions later)
         DisplayMetrics metrics = getResources().getDisplayMetrics();
@@ -111,6 +143,10 @@ public class PriceActivity extends AppCompatActivity {
         errorMessageTextView = findViewById(R.id.errorMessageTextView);
         lastUpdateTextView = findViewById(R.id.lastUpdateTextView);
         lastUpdateBlock = findViewById(R.id.lastUpdateBlock);
+        clockBlock = findViewById(R.id.clockBlock);
+
+        // Optional: bitcoin logo for ultra-wide layout
+        btcLogoImage = findViewById(R.id.btcLogo);
 
         // Apply font to all text views
         applyFont();
@@ -149,7 +185,9 @@ public class PriceActivity extends AppCompatActivity {
         if (nightMode) {
             // Night mode colors
             rootLayout.setBackgroundColor(Color.parseColor("#000000"));
-            borderView.setVisibility(View.GONE);
+            if (borderView != null) {
+                borderView.setVisibility(View.GONE);
+            }
 
             clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
             priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
@@ -157,11 +195,20 @@ public class PriceActivity extends AppCompatActivity {
             lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
 
             // BTC text image is dimmed in night mode
-            btcTextImage.setAlpha(0.7f);
+            if (btcTextImage != null) {
+                btcTextImage.setAlpha(0.7f);
+            }
+
+            // Bitcoin logo dimmed in night mode
+            if (btcLogoImage != null) {
+                btcLogoImage.setAlpha(0.7f);
+            }
         } else {
             // Day mode colors
             rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
-            borderView.setVisibility(View.VISIBLE);
+            if (borderView != null) {
+                borderView.setVisibility(View.VISIBLE);
+            }
 
             clockTextView.setTextColor(Color.parseColor("#000000"));
             priceTextView.setTextColor(Color.parseColor("#000000"));
@@ -169,7 +216,14 @@ public class PriceActivity extends AppCompatActivity {
             lastUpdateTextView.setTextColor(Color.parseColor("#A9A9A9"));
 
             // Full opacity for BTC text in day mode
-            btcTextImage.setAlpha(1.0f);
+            if (btcTextImage != null) {
+                btcTextImage.setAlpha(1.0f);
+            }
+
+            // Full opacity for bitcoin logo in day mode
+            if (btcLogoImage != null) {
+                btcLogoImage.setAlpha(1.0f);
+            }
         }
     }
 
@@ -189,51 +243,130 @@ public class PriceActivity extends AppCompatActivity {
         density = actualDensity;
 
         // Log dimensions for debugging
-        android.util.Log.d("PriceActivity", "Real screen dimensions: " + actualWidth + "x" + actualHeight + 
-            ", aspect ratio: " + ((float) actualWidth / actualHeight));
-        
-        // Check if screen is wider (aspect ratio >= 1.95)
-        // Use real screen aspect ratio, not window aspect ratio
-        float aspectRatio = (float) actualWidth / actualHeight;
+        android.util.Log.d("PriceActivity", "Real screen dimensions: " + actualWidth + "x" + actualHeight +
+            ", aspect ratio: " + ((float) actualWidth / actualHeight) + ", category: " + aspectRatioCategory);
 
-        // Apply layout margins based on original CSS specs
+        // Apply layout based on aspect ratio category
+        switch (aspectRatioCategory) {
+            case TABLET:
+                applyTabletLayout();
+                break;
+            case WIDE:
+                applyWideLayout();
+                break;
+            case ULTRAWIDE:
+                applyUltraWideLayout();
+                break;
+        }
+    }
+
+    private void applyTabletLayout() {
+        // Tablet layout (aspect ratio <= 1.6):
+        // - 50% wider border (handled by day_border_tablet.xml - 15dp instead of 10dp)
+        // - Clock: same top/right padding (3vw right, matching top padding)
+        // - Last price info: smaller text, centered vertically in border area
+
         // BTC text: padding-left: 4vw
-        LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
-        btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
-        btcTextBlock.setLayoutParams(btcParams);
-
-        // Clock block: padding-right: 3vw, padding-top: 5vh
-        LinearLayout clockBlock = findViewById(R.id.clockBlock);
-        if (clockBlock != null) {
-            clockBlock.setPadding(
-                0,  // left
-                (int) (screenHeight * 0.05f),  // top: 5vh
-                (int) (screenWidth * 0.03f),   // right: 3vw
-                0   // bottom
-            );
+        if (btcTextBlock != null) {
+            LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
+            btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
+            btcTextBlock.setLayoutParams(btcParams);
         }
 
-        // Last update block: padding-right: 2vw, with bottom margin
-        LinearLayout.LayoutParams lastUpdateParams = (LinearLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
-        lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f)); // 2vw from right
-        // Add bottom margin to shift text up from bottom edge
-        lastUpdateParams.bottomMargin = (int) (screenHeight * 0.01f); // Small offset
-        lastUpdateBlock.setLayoutParams(lastUpdateParams);
+        // Clock block: same padding from top and right (3vw right, 3vw top)
+        if (clockBlock != null) {
+            int topPadding = (int) (screenWidth * 0.03f); // 3vw from top (same as right)
+            int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
+            clockBlock.setPadding(0, topPadding, rightPadding, 0);
+        }
 
-        if (aspectRatio >= 2.00f) {
-            // Hide BTC text block on wider screens
-            btcTextBlock.setVisibility(View.GONE);
+        // Last update block: inside border, smaller text, vertically centered
+        if (lastUpdateBlock != null) {
+            // Note: lastUpdateBlock is now inside a FrameLayout (lastUpdateBlockContainer)
+            // so we need to use FrameLayout.LayoutParams
+            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
+            // Position at bottom with small margin
+            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
+            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
+            lastUpdateBlock.setLayoutParams(lastUpdateParams);
 
-            // Adjust last update block position for wider screens
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
-            if (nightMode) {
-                // Shift down in night mode
-                params.topMargin = (int) (screenHeight * 0.02f);
-            } else {
-                // Shift up in day mode
-                params.topMargin = (int) (-screenHeight * 0.01f);
-            }
-            lastUpdateBlock.setLayoutParams(params);
+            // Smaller text size
+            float updateSizeSp = (screenHeight * 0.025f) / density;
+            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
+        }
+    }
+
+    private void applyWideLayout() {
+        // Wide layout (1.6 < aspect ratio <= 1.9):
+        // - Clock: same top/right padding (3vw right, matching top padding)
+        // - Last price info: smaller text, centered vertically in border area
+
+        // BTC text: padding-left: 4vw
+        if (btcTextBlock != null) {
+            LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
+            btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
+            btcTextBlock.setLayoutParams(btcParams);
+        }
+
+        // Clock block: same padding from top and right (3vw right, 3vw top)
+        if (clockBlock != null) {
+            int topPadding = (int) (screenWidth * 0.03f); // 3vw from top (same as right)
+            int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
+            clockBlock.setPadding(0, topPadding, rightPadding, 0);
+        }
+
+        // Last update block: inside border, smaller text, vertically centered
+        if (lastUpdateBlock != null) {
+            // Note: lastUpdateBlock is inside a FrameLayout (lastUpdateBlockContainer)
+            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
+            // Position at bottom with small margin
+            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
+            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
+            lastUpdateBlock.setLayoutParams(lastUpdateParams);
+
+            // Smaller text size
+            float updateSizeSp = (screenHeight * 0.025f) / density;
+            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
+        }
+    }
+
+    private void applyUltraWideLayout() {
+        // Ultra-wide layout (aspect ratio > 1.9):
+        // - Bitcoin logo on same row as clock (space-between)
+        // - Clock: same top/right padding
+        // - Last price info: smaller text
+
+        // BTC text block is already hidden in XML (visibility="gone")
+
+        // Setup bitcoin logo if present
+        if (btcLogoImage != null && clockBlock != null) {
+            // Size logo to match clock height
+            float clockSizeSp = (screenHeight * 0.14f) / density;
+            float clockSizePx = clockSizeSp * density;
+
+            // Set logo size (slightly smaller than clock height to fit)
+            LinearLayout.LayoutParams logoParams = (LinearLayout.LayoutParams) btcLogoImage.getLayoutParams();
+            logoParams.height = (int) (clockSizePx * 0.9f); // 90% of clock height
+            logoParams.width = LinearLayout.LayoutParams.WRAP_CONTENT;
+            btcLogoImage.setLayoutParams(logoParams);
+
+            // Set padding for clock block (3vw top, 3vw right, 3vw left for logo)
+            int horizontalPadding = (int) (screenWidth * 0.03f);
+            int topPadding = (int) (screenWidth * 0.03f); // same as horizontal
+            clockBlock.setPadding(horizontalPadding, topPadding, horizontalPadding, 0);
+        }
+
+    // Last update block
+        if (lastUpdateBlock != null) {
+            // Note: lastUpdateBlock is inside a FrameLayout (lastUpdateBlockContainer)
+            android.widget.FrameLayout.LayoutParams lastUpdateParams = (android.widget.FrameLayout.LayoutParams) lastUpdateBlock.getLayoutParams();
+            lastUpdateParams.setMarginEnd((int) (screenWidth * 0.02f));
+            lastUpdateParams.bottomMargin = (int) (screenHeight * 0.005f);
+            lastUpdateBlock.setLayoutParams(lastUpdateParams);
+
+            // Smaller text size
+            float updateSizeSp = (screenHeight * 0.025f) / density;
+            lastUpdateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, updateSizeSp);
         }
     }
 

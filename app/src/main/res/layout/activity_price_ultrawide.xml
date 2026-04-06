@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/priceRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/price_day_bg">
+
+    <!-- Orange border for day mode - standard 10dp width -->
+    <View
+        android:id="@+id/borderView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/day_border"
+        android:visibility="gone" />
+
+    <!-- Main content container - bottom layer -->
+    <LinearLayout
+        android:id="@+id/mainContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="0dp">
+
+        <!-- Empty space for clock (15vh) - clocks will be overlaid on top -->
+        <View
+            android:id="@+id/clockSpacer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="15" />
+
+        <!-- BTC Text Section - Logo - HIDDEN on ultra-wide screens -->
+        <LinearLayout
+            android:id="@+id/btcTextBlock"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="15"
+            android:orientation="horizontal"
+            android:gravity="start|center_vertical"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/btcText"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/btc_text_logo"
+                android:adjustViewBounds="true"
+                android:scaleType="fitStart" />
+
+        </LinearLayout>
+
+        <!-- Price Container -->
+        <FrameLayout
+            android:id="@+id/priceContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="49"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- Single TextView for price + currency to ensure currency always shows -->
+            <TextView
+                android:id="@+id/priceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="0$"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:textColor="@color/price_day_color"
+                android:includeFontPadding="false"
+                android:singleLine="true" />
+
+            <!-- Hidden TextView just for currency color reference (will be updated in code) -->
+            <TextView
+                android:id="@+id/currencyTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:text="$" />
+
+        </FrameLayout>
+
+        <!-- Price Change Section -->
+        <LinearLayout
+            android:id="@+id/changeBlock"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="17"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <TextView
+                android:id="@+id/changeTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="▲0$"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:gravity="center"
+                android:singleLine="true" />
+
+            <TextView
+                android:id="@+id/changePercentageTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="▲0.00%"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:gravity="center"
+                android:singleLine="true" />
+
+            <!-- Error message TextView - replaces change views when error occurs -->
+            <TextView
+                android:id="@+id/errorMessageTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text=""
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:gravity="center"
+                android:visibility="gone"
+                android:singleLine="true" />
+
+        </LinearLayout>
+
+        <!-- Last Update Section - positioned at bottom inside border -->
+        <FrameLayout
+            android:id="@+id/lastUpdateBlockContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4">
+
+            <LinearLayout
+                android:id="@+id/lastUpdateBlock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center|end"
+                android:orientation="horizontal"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <TextView
+                    android:id="@+id/lastUpdateTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Last price info: 00:00:00 CET"
+                    android:textSize="2sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/last_update_day"
+                    android:fontFamily="sans-serif"
+                    android:includeFontPadding="false" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- Clock overlay with Bitcoin logo - TOP LAYER (z-index highest) -->
+    <!-- Layout: Bitcoin logo on left, clock on right, space-between -->
+    <LinearLayout
+        android:id="@+id/clockBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="0dp"
+        android:paddingEnd="0dp"
+        android:paddingStart="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Bitcoin logo on the left - sized to match clock height -->
+        <ImageView
+            android:id="@+id/btcLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/btc_logo"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter" />
+
+        <!-- Spacer to push clock to the right -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/clockTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🕑00:00"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/abril_fatface"
+            android:textColor="@color/clock_day_color"
+            android:includeFontPadding="true"
+            android:layout_marginTop="0dp"
+            android:lineSpacingMultiplier="1" />
+
+    </LinearLayout>
+
+</FrameLayout>
