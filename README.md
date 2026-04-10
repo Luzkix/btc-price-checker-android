@@ -15,9 +15,9 @@ A minimalist Bitcoin price ticker designed for landscape orientation displays. F
   - **Ultrawide** (> 1.9, e.g., 20:9) - 10dp border with logo beside clock
 - **Dynamic font sizing** based on the number of price digits
 - **Day and night mode** support
-- **Currency selection**: USD or EUR
 - **Fullscreen display** with no system UI distractions
 - **Adaptive font calculation** using binary search with Paint measurement
+- **Currency selection**: USD or EUR
 
 ## Adaptive Font Sizing
 
@@ -46,8 +46,7 @@ app/
 │   │   ├── layout/
 │   │   │   ├── activity_price_tablet.xml     # Tablet layout (4:3)
 │   │   │   ├── activity_price_wide.xml       # Wide layout (16:9)
-│   │   │   ├── activity_price_ultrawide.xml  # Ultrawide layout (20:9)
-│   │   │   └── activity_home.xml             # Home/currency selection
+│   │   │   └── activity_price_ultrawide.xml  # Ultrawide layout (20:9)
 │   │   ├── drawable/
 │   │   │   ├── day_border.xml       # 10dp orange border
 │   │   │   └── day_border_tablet.xml # 15dp orange border
@@ -91,4 +90,3 @@ if (aspectRatio <= 1.6f) {
 Each layout is optimized for its specific aspect ratio while maintaining consistent visual appearance.
 
 ## License
-
