@@ -549,13 +549,13 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
                         color = nightMode ? Color.parseColor("#966211") : Color.parseColor("#FAA31B");
                     }
 
-                    // Set change text with arrow: ▲ +123$
-                    String changeText = arrow + (isPriceUp ? "+" : "") + String.format(Locale.US, "%,d", Math.abs(finalPriceChange)) + finalCurrencySymbol;
+                    // Set change text with arrow: ▲ 123$
+                    String changeText = arrow + String.format(Locale.US, "%,d", Math.abs(finalPriceChange)) + finalCurrencySymbol;
                     changeTextView.setText(changeText);
                     changeTextView.setTextColor(color);
 
-                    // Set percentage text: ▲ +0.42%
-                    String changePercentageText = arrow + (isPriceUp ? "+" : "") + finalPriceChangePercentage + "%";
+                    // Set percentage text: ▲ 0.42%
+                    String changePercentageText = arrow + finalPriceChangePercentage + "%";
                     changePercentageTextView.setText(changePercentageText);
                     changePercentageTextView.setTextColor(color);
 
