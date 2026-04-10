@@ -8,4 +8,11 @@
         app:fontStyle="normal"
         app:fontWeight="400"
         app:font="@font/abril_fatface" />
+    <font
+        android:fontStyle="normal"
+        android:fontWeight="700"
+        android:font="@font/abril_fatface_bold"
+        app:fontStyle="normal"
+        app:fontWeight="700"
+        app:font="@font/abril_fatface_bold" />
 </font-family>

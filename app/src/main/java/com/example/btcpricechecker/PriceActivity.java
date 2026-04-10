@@ -176,11 +176,11 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
     private void applyFont() {
         // Apply Abril Fatface font to price-related text views
         if (abrilFatfaceFont != null) {
-            clockTextView.setTypeface(abrilFatfaceFont);
-            priceTextView.setTypeface(abrilFatfaceFont);
-            currencyTextView.setTypeface(abrilFatfaceFont);
-            changeTextView.setTypeface(abrilFatfaceFont);
-            changePercentageTextView.setTypeface(abrilFatfaceFont);
+            clockTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
+            priceTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
+            currencyTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
+            changeTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
+            changePercentageTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
         }
     }
 
