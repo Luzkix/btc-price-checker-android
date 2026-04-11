@@ -113,14 +113,15 @@
             android:id="@+id/changePercentageTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="@font/abril_fatface"
+            android:singleLine="true"
             android:text="▲0.00%"
             android:textSize="15sp"
             android:textStyle="bold"
-            android:fontFamily="@font/abril_fatface"
-            android:singleLine="true"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Error message TextView - replaces change views when error occurs -->
         <TextView
