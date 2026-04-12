@@ -41,7 +41,8 @@ app/
 ├── src/main/
 │   ├── java/com/example/btcpricechecker/
 │   │   ├── PriceActivity.java       # Main price display activity
-│   │   └── HomeActivity.java        # Currency selection screen
+│   │   ├── HomeActivity.java        # Currency selection screen
+│   │   └── BitcoinApiService.java  # API communication layer
 │   ├── res/
 │   │   ├── layout/
 │   │   │   ├── activity_price_tablet.xml     # Tablet layout (4:3)
@@ -55,7 +56,7 @@ app/
 │   │   └── values/
 │   │       ├── colors.xml           # Color definitions
 │   │       ├── strings.xml          # String resources
-│   │       └── attrs.xml            # Custom attributes
+│   │       └── integers.xml         # Application parameters
 │   └── AndroidManifest.xml
 ```
 
@@ -75,12 +76,16 @@ The application uses Coinbase Exchange API:
 
 ## Layout System
 
-The app dynamically selects the appropriate layout file based on the calculated aspect ratio of the device screen:
+The app dynamically selects the appropriate layout file based on the calculated aspect ratio of the device screen. Aspect ratio thresholds are configurable in `integers.xml`:
 
 ```java
-if (aspectRatio <= 1.6f) {
+// Values loaded from resources (integers.xml)
+float tabletMaxRatio = getTabletMaxAspectRatio();   // 1.6
+float wideMaxRatio = getWideMaxAspectRatio();       // 1.9
+
+if (aspectRatio <= tabletMaxRatio) {
     // Use activity_price_tablet.xml
-} else if (aspectRatio <= 1.9f) {
+} else if (aspectRatio <= wideMaxRatio) {
     // Use activity_price_wide.xml
 } else {
     // Use activity_price_ultrawide.xml
@@ -88,5 +93,13 @@ if (aspectRatio <= 1.6f) {
 ```
 
 Each layout is optimized for its specific aspect ratio while maintaining consistent visual appearance.
+
+## Configuration
+
+All configurable parameters are centralized in `res/values/integers.xml`:
+- **Timing**: Update interval, cache duration, loading duration
+- **Layout**: Margins, paddings, aspect ratio thresholds
+- **Font sizing**: Percentages, safety margins, binary search iterations
+- **Opacity**: Logo alpha values for day/night mode
 
 ## License

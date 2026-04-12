@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BTC Price Checker</string>
-    <string name="usd_currency">USD</string>
-    <string name="eur_currency">EUR</string>
 </resources>

@@ -32,6 +32,13 @@ String currentCurrency = "USD";           // USD or EUR
 boolean nightMode = false;             // Day/night mode
 Timer timer;                         // 30-second update timer
 Handler handler;                     // Main thread communication
+BitcoinApiService apiService;         // API communication
+
+// Config (loaded from integers.xml)
+int priceUpdateIntervalSeconds;
+int timerIntervalMs;
+int minLoadingDurationMs;
+int fontBinarySearchIterations;
 
 // Caching
 JSONObject cachedUsdData / cachedEurData;
@@ -56,18 +63,26 @@ TextView lastUpdateTextView;         // Last price info: HH:MM:SS CET
 TextView errorMessageTextView;        // ERROR / LOST CONNECTION
 ```
 
+#### BitcoinApiService.java
+**Purpose**: Network communication layer - fetches price data from Coinbase API
+
+**Key Methods**:
+- `fetchPrice(String currency, PriceCallback callback)`: Async API call
+- `PriceCallback`: Interface with `onSuccess(JSONObject)` and `onError(String)`
+
 ### Layout System (3 Responsive Variants)
 
-**Aspect Ratio Detection**:
+**Aspect Ratio Detection** (configurable in `integers.xml`):
 ```java
 float aspectRatio = (float) actualWidth / actualHeight;
 
-if (aspectRatio <= 1.6f) {
+// Values from integers.xml: tablet_max_aspect_ratio_x10=16, wide_max_aspect_ratio_x10=19
+if (aspectRatio <= getTabletMaxAspectRatio()) {      // 1.6
     layoutRes = R.layout.activity_price_tablet;      // TABLET
-} else if (aspectRatio <= 1.9f) {
-    layoutRes = R.layout.activity_price_wide;        // WIDE
+} else if (aspectRatio <= getWideMaxAspectRatio()) { // 1.9
+    layoutRes = R.layout.activity_price_wide;         // WIDE
 } else {
-    layoutRes = R.layout.activity_price_ultrawide;    // ULTRAWIDE
+    layoutRes = R.layout.activity_price_ultrawide;   // ULTRAWIDE
 }
 ```
 
@@ -75,20 +90,19 @@ if (aspectRatio <= 1.6f) {
 
 **Problem**: Price must fit screen width regardless of digit count (4-7+ digits)
 
-**Solution**: Binary search with Paint.measureText()
+**Solution**: Binary search with Paint.measureText() (configurable via `integers.xml`)
 
 ```java
 private float calculateMaxFontSizeForDigitCount(int digitCount, int availableWidthPx) {
     // Build "worst case" text with all 9s (widest digit)
     String worstCaseText = buildWorstCasePrice(digitCount); // e.g., "999,999$"
     
-    // Binary search for max font size
-    float lowSizePx = 1f;
-    float highSizePx = screenHeight * 0.70f;
-    float bestSizePx = lowSizePx;
+    // Values from integers.xml: font_search_max_height_percent=70, font_safety_margin=95, font_max_height_percent=60
+    float highSizePx = screenHeight * getFontSearchMaxHeightPercent(); // 70%
+    float bestSizePx = 1f;
     
-    for (int i = 0; i < 25; i++) {
-        float midSizePx = (lowSizePx + highSizePx) / 2f;
+    for (int i = 0; i < fontBinarySearchIterations; i++) { // 25 iterations
+        float midSizePx = (1f + highSizePx) / 2f;
         paint.setTextSize(midSizePx);
         paint.getTextBounds(worstCaseText, 0, worstCaseText.length(), textBounds);
         
@@ -100,9 +114,9 @@ private float calculateMaxFontSizeForDigitCount(int digitCount, int availableWid
         }
     }
     
-    // Apply safety margins
-    bestSizePx *= 0.95f;                    // 5% safety margin
-    bestSizePx = min(bestSizePx, screenHeight * 0.60f);  // Max 60vh
+    // Apply safety margins (95%) and max height (60%)
+    bestSizePx *= getFontSafetyMargin();                    // 0.95f
+    bestSizePx = min(bestSizePx, screenHeight * getFontMaxHeightPercent()); // 60%
     
     return bestSizePx / density;             // Convert to SP
 }
@@ -136,12 +150,11 @@ priceTextView.post(() -> {
   - `low`: 24h low
   - `volume`: Trading volume
 
-**Caching Logic**:
+**Caching Logic** (values from `integers.xml`):
 ```java
-static final int PRICE_UPDATE_INTERVAL = 10; // seconds
-
+// Loaded in loadConfig() from integers.xml: price_update_interval_seconds=10
 // Check cache before fetching
-if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
+if (cachedData != null && (currentTime - lastUpdate) < priceUpdateIntervalSeconds) {
     updatePriceUI(cachedData);
     return;
 }
@@ -187,21 +200,27 @@ double changePercentage = ((last / open) - 1) * 100;
 
 ### Layout Adjustment Methods
 
-Each layout has programmatic adjustments after inflation:
+Each layout has programmatic adjustments after inflation (values from `integers.xml`):
 
-#### applyTabletLayout()
-- BTC text: 4vw left margin
-- Clock: 1.5vw top padding, 3vw right
-- Last update: Margins in XML
-
-#### applyWideLayout()
-- Same as tablet but with 10dp border
-- Clock: 1.5vw top, 3vw right
+#### applyTabletLayout() / applyWideLayout()
+- Uses shared `applySharedLayoutAdjustments()`:
+  - BTC text: `btc_text_margin_start_permil` (40‰) left margin
+  - Clock: `clock_top_padding_permil` (15‰) top, `clock_horizontal_padding_permil` (30‰) right
 
 #### applyUltraWideLayout()
-- Bitcoin logo height matches clock text height
-- Clock block: 3vw horizontal, 1.5vw top padding
+- Bitcoin logo height matches clock text height (`clock_size_percent` = 14%)
+- Clock block: Uses same padding values as other layouts
 - Logo positioned via space-between in LinearLayout
+
+#### Helper Methods
+All configurable via `integers.xml`:
+```java
+getClockSizePercent()           // 14 - clock text size
+getChangeSizePercent()          // 15 - change text size
+getAvailableWidthPercent()       // 95 - available width margin
+getNightModeLogoAlpha()         // 70 - logo opacity in night mode
+getDayModeLogoAlpha()           // 100 - logo opacity in day mode
+```
 
 ### Error Handling
 
@@ -255,9 +274,11 @@ implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
 ## Notes for Refactoring
 
-1. **Preserve exact behavior**: Font calculation must remain pixel-perfect
-2. **Maintain responsive layouts**: All 3 aspect ratios must work
-3. **Keep caching**: 10-second cache + 30-second updates
-4. **Night mode parity**: Visual appearance must match current
-5. **Fullscreen immersive**: FLAG_KEEP_SCREEN_ON + SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-6. **Error recovery**: Current error→success flow must be preserved
+1. **Config parameters**: Most values are now in `integers.xml` - check there first before modifying code
+2. **Preserve exact behavior**: Font calculation must remain pixel-perfect
+3. **Maintain responsive layouts**: All 3 aspect ratios must work
+4. **Keep caching**: 10-second cache + 30-second updates
+5. **Night mode parity**: Visual appearance must match current
+6. **Fullscreen immersive**: FLAG_KEEP_SCREEN_ON + SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+7. **Error recovery**: Current error→success flow must be preserved
+8. **API separation**: Network logic is in `BitcoinApiService.java`, keep it decoupled
