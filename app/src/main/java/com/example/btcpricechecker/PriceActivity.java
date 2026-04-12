@@ -540,6 +540,9 @@ private TextView errorMessageTextView;
 
             // Set ERROR as price
             priceTextView.setText("ERROR");
+            
+            // Update font size for ERROR text to match the price text size calculation logic
+            updatePriceTextSizeForError();
 
             // Hide change views, show error message
             changeTextView.setVisibility(View.GONE);
@@ -748,6 +751,61 @@ private TextView errorMessageTextView;
             ", available=" + availableWidth + " (95% of screen)");
 
         return Math.max(availableWidth, 300); // Minimum 300px fallback
+    }
+    
+    private void updatePriceTextSizeForError() {
+        // Use the same font size calculation logic as for normal prices
+        // Calculate font size for "ERROR" text (5 characters)
+        int availableWidth = getAvailableWidthForPriceText();
+        float fontSize = calculateMaxFontSizeForError(availableWidth);
+        
+        // Reduce font size by 5% for ERROR text
+        fontSize *= 0.95f;
+        
+        // Apply the font size to priceTextView
+        priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
+    }
+    
+    private float calculateMaxFontSizeForError(int availableWidthPx) {
+        // For "ERROR" text (5 characters)
+        Paint paint = new Paint();
+        paint.setTypeface(abrilFatfaceFont);
+        paint.setAntiAlias(true);
+        
+        // Binary search for maximum font size
+        float lowSizePx = 1f; // Start with 1px
+        float highSizePx = screenHeight * 0.70f; // Max 70% of screen height
+        float bestSizePx = lowSizePx;
+        
+        Rect textBounds = new Rect();
+        
+        // Binary search with 25 iterations for precision
+        for (int i = 0; i < 25; i++) {
+            float midSizePx = (lowSizePx + highSizePx) / 2f;
+            paint.setTextSize(midSizePx);
+            paint.getTextBounds("ERROR", 0, 5, textBounds);
+            
+            float measuredWidth = textBounds.width();
+            
+            if (measuredWidth <= availableWidthPx) {
+                // This size fits, try larger
+                bestSizePx = midSizePx;
+                lowSizePx = midSizePx;
+            } else {
+                // This size is too big, try smaller
+                highSizePx = midSizePx;
+            }
+        }
+        
+        // Add small safety margin (95% of calculated size)
+        bestSizePx *= 0.95f;
+        
+        // Limit to max 60vh (leave room for other UI elements)
+        float maxSizeFromHeight = screenHeight * 0.60f;
+        bestSizePx = Math.min(bestSizePx, maxSizeFromHeight);
+        
+        // Convert pixels to SP units
+        return bestSizePx / density;
     }
 
     @Override
