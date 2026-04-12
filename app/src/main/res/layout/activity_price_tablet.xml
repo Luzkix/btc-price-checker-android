@@ -84,100 +84,106 @@
 
         </FrameLayout>
 
-    <!-- Price Change Section -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/changeBlock"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="17"
-        android:paddingStart="56dp"
-        android:paddingEnd="64dp"
-        android:layout_marginBottom="24dp"
-        android:clipChildren="false"
-        android:clipToPadding="false">
-
-        <TextView
-            android:id="@+id/changeTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="▲0$"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/abril_fatface"
-            android:singleLine="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <TextView
-            android:id="@+id/changePercentageTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:fontFamily="@font/abril_fatface"
-            android:singleLine="true"
-            android:text="▲0.00%"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Error message TextView - replaces change views when error occurs -->
-        <TextView
-            android:id="@+id/errorMessageTextView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/abril_fatface"
-            android:gravity="center"
-            android:visibility="gone"
-            android:singleLine="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Last Update Section - positioned directly in the orange border area -->
-    <FrameLayout
-        android:id="@+id/lastUpdateBlockContainer"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="4">
-
-        <LinearLayout
-            android:id="@+id/lastUpdateBlock"
-            android:layout_width="wrap_content"
-            android:layout_height="15dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="15dp"
-            android:layout_marginBottom="0dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical|end"
+        <!-- Price Change Section -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/changeBlock"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="20"
+            android:paddingStart="56dp"
+            android:paddingEnd="64dp"
+            android:layout_marginBottom="24dp"
             android:clipChildren="false"
             android:clipToPadding="false">
 
             <TextView
-                android:id="@+id/lastUpdateTextView"
+                android:id="@+id/changeTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Last price info: 00:00:00 CET"
-                android:textSize="12sp"
+                android:text="▲0.00$"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                android:textColor="@color/last_update_day"
-                android:fontFamily="sans-serif"
-                android:includeFontPadding="false" />
+                android:fontFamily="@font/abril_fatface"
+                android:includeFontPadding="false"
+                android:ellipsize="none"
+                android:maxLines="1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/changePercentageTextView"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/changePercentageTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="@font/abril_fatface"
+                android:text="▲0.00%"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:ellipsize="none"
+                android:maxLines="1"
+                app:layout_constraintStart_toEndOf="@id/changeTextView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-    </FrameLayout>
+            <!-- Error message TextView - replaces change views when error occurs -->
+            <TextView
+                android:id="@+id/errorMessageTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/abril_fatface"
+                android:gravity="center"
+                android:visibility="gone"
+                android:singleLine="true"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Last Update Section - positioned directly in the orange border area -->
+        <FrameLayout
+            android:id="@+id/lastUpdateBlockContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4">
+
+            <LinearLayout
+                android:id="@+id/lastUpdateBlock"
+                android:layout_width="wrap_content"
+                android:layout_height="15dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="0dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|end"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <TextView
+                    android:id="@+id/lastUpdateTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Last price info: 00:00:00 CET"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/last_update_day"
+                    android:fontFamily="sans-serif"
+                    android:includeFontPadding="false" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
     </LinearLayout>
 
-    <!-- Clock overlay - TOP LAYER (z-index highest) -->
+    <!-- Clock overlay -->
     <LinearLayout
         android:id="@+id/clockBlock"
         android:layout_width="match_parent"
