@@ -448,10 +448,6 @@ private TextView errorMessageTextView;
 
     private void showError(String message) {
         runOnUiThread(() -> {
-            // Hide loading state when showing error
-            //hideLoadingState();
-
-            // Set ERROR as price
             priceTextView.setText("ERROR");
             
             // Update font size for ERROR text to match the price text size calculation logic
