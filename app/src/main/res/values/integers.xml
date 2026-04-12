@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="price_update_interval_seconds">10</integer>
+    <integer name="timer_interval_ms">30000</integer>
+    <integer name="cache_expiry_seconds">10</integer>
+    <integer name="font_binary_search_iterations">25</integer>
+    <integer name="min_loading_duration_ms">4000</integer>
+    <integer name="connection_timeout_ms">5000</integer>
+    <integer name="min_available_width_px">300</integer>
+</resources>

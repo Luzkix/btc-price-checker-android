@@ -1,7 +1,5 @@
 package com.example.btcpricechecker;
 
-import android.app.AlertDialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -21,10 +19,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -32,13 +26,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PriceActivity extends AppCompatActivity {
-    private static final int PRICE_UPDATE_INTERVAL = 10; // 10 seconds cache
+    private static final int PRICE_UPDATE_INTERVAL = 10;
     private String currentCurrency = "USD";
     private boolean nightMode = false;
     private Timer timer;
     private Handler handler = new Handler(Looper.getMainLooper());
+    private BitcoinApiService apiService;
 
-    // Caching variables
     private JSONObject cachedUsdData = null;
     private JSONObject cachedEurData = null;
     private long usdLastUpdate = 0;
@@ -135,6 +129,9 @@ private TextView errorMessageTextView;
         // Load font
         abrilFatfaceFont = ResourcesCompat.getFont(this, R.font.abril_fatface);
 
+        // Initialize API service
+        apiService = new BitcoinApiService();
+
         // Extract parameters
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -192,48 +189,31 @@ private TextView errorMessageTextView;
 
     private void applyTheme() {
         if (nightMode) {
-            // Night mode colors
-            rootLayout.setBackgroundColor(Color.parseColor("#000000"));
-            if (borderView != null) {
-                borderView.setVisibility(View.GONE);
-            }
+            rootLayout.setBackgroundColor(getColor(R.color.price_night_bg));
+            if (borderView != null) borderView.setVisibility(View.GONE);
 
-            clockTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
-            currencyTextView.setTextColor(Color.parseColor("#6B6C6C"));
-            lastUpdateTextView.setTextColor(Color.parseColor("#292929"));
+            clockTextView.setTextColor(getColor(R.color.clock_night_color));
+            priceTextView.setTextColor(getColor(R.color.price_night_color));
+            currencyTextView.setTextColor(getColor(R.color.currency_night_color));
+            lastUpdateTextView.setTextColor(getColor(R.color.last_update_night));
 
-            // BTC text image is dimmed in night mode
-            if (btcTextImage != null) {
-                btcTextImage.setAlpha(0.7f);
-            }
-
-            // Bitcoin logo dimmed in night mode
-            if (btcLogoImage != null) {
-                btcLogoImage.setAlpha(0.7f);
-            }
+            setLogoAlpha(0.7f);
         } else {
-            // Day mode colors
-            rootLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
-            if (borderView != null) {
-                borderView.setVisibility(View.VISIBLE);
-            }
+            rootLayout.setBackgroundColor(getColor(R.color.price_day_bg));
+            if (borderView != null) borderView.setVisibility(View.VISIBLE);
 
-            clockTextView.setTextColor(Color.parseColor("#000000"));
-            priceTextView.setTextColor(Color.parseColor("#000000"));
-            currencyTextView.setTextColor(Color.parseColor("#000000"));
-            lastUpdateTextView.setTextColor(Color.parseColor("#FFFFFF"));
+            clockTextView.setTextColor(getColor(R.color.clock_day_color));
+            priceTextView.setTextColor(getColor(R.color.price_day_color));
+            currencyTextView.setTextColor(getColor(R.color.currency_day_color));
+            lastUpdateTextView.setTextColor(getColor(R.color.last_update_day));
 
-            // Full opacity for BTC text in day mode
-            if (btcTextImage != null) {
-                btcTextImage.setAlpha(1.0f);
-            }
-
-            // Full opacity for bitcoin logo in day mode
-            if (btcLogoImage != null) {
-                btcLogoImage.setAlpha(1.0f);
-            }
+            setLogoAlpha(1.0f);
         }
+    }
+
+    private void setLogoAlpha(float alpha) {
+        if (btcTextImage != null) btcTextImage.setAlpha(alpha);
+        if (btcLogoImage != null) btcLogoImage.setAlpha(alpha);
     }
 
     private void adjustLayoutForAspectRatio() {
@@ -275,50 +255,25 @@ private TextView errorMessageTextView;
     }
 
     private void applyTabletLayout() {
-        // Tablet layout (aspect ratio <= 1.6):
-        // - 50% wider border (handled by day_border_tablet.xml - 15dp instead of 10dp)
-        // - Clock: same top/right padding (3vw right, matching top padding)
-        // - Last price info: positioned in XML with proper margins
-
-        // BTC text: padding-left: 4vw
-        if (btcTextBlock != null) {
-            LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
-            btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
-            btcTextBlock.setLayoutParams(btcParams);
-        }
-
-        // Clock block: reduced top padding (1.5vw instead of 3vw)
-        if (clockBlock != null) {
-            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
-            int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
-            clockBlock.setPadding(0, topPadding, rightPadding, 0);
-        }
-
-        // Last update block: positioned in XML with proper margins for 15dp border
-        // Margins are already set in activity_price_tablet.xml
+        applySharedLayoutAdjustments();
     }
 
     private void applyWideLayout() {
-        // Wide layout (1.6 < aspect ratio <= 1.9):
-        // - Clock: reduced top padding (1.5vw), right padding unchanged
-        // - Last price info: positioned in XML with proper margins
+        applySharedLayoutAdjustments();
+    }
 
-        // BTC text: padding-left: 4vw
+    private void applySharedLayoutAdjustments() {
         if (btcTextBlock != null) {
             LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
-            btcParams.setMarginStart((int) (screenWidth * 0.04f)); // 4vw from left
+            btcParams.setMarginStart((int) (screenWidth * 0.04f));
             btcTextBlock.setLayoutParams(btcParams);
         }
 
-        // Clock block: reduced top padding (1.5vw instead of 3vw)
         if (clockBlock != null) {
-            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
-            int rightPadding = (int) (screenWidth * 0.03f); // 3vw from right
+            int topPadding = (int) (screenWidth * 0.015f);
+            int rightPadding = (int) (screenWidth * 0.03f);
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
-
-        // Last update block: positioned in XML with proper margins for 10dp border
-        // Margins are already set in activity_price_wide.xml
     }
 
     private void applyUltraWideLayout() {
@@ -381,11 +336,10 @@ private TextView errorMessageTextView;
             errorMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
             errorMessageTextView.setText("LOADING");
 
-            // Set colors based on theme
             if (nightMode) {
-                errorMessageTextView.setTextColor(Color.parseColor("#6B6C6C")); // Gray color for night mode
+                errorMessageTextView.setTextColor(getColor(R.color.clock_night_color));
             } else {
-                errorMessageTextView.setTextColor(Color.parseColor("#000000")); // Black color for day mode
+                errorMessageTextView.setTextColor(getColor(R.color.price_day_color));
             }
 
             // Mark loading state as visible
@@ -458,79 +412,38 @@ private TextView errorMessageTextView;
     }
 
     private void fetchBitcoinPrice() {
-        new Thread(() -> {
-            try {
-                // Check if we should use cached data
-                JSONObject cachedData = null;
-                long currentTime = System.currentTimeMillis() / 1000;
-                long lastUpdate = 0;
+        long currentTime = System.currentTimeMillis() / 1000;
+        long lastUpdate = currentCurrency.equals("USD") ? usdLastUpdate : eurLastUpdate;
+        JSONObject cachedData = currentCurrency.equals("USD") ? cachedUsdData : cachedEurData;
 
+        if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
+            updatePriceUI(cachedData);
+            return;
+        }
+
+        if (isFirstLoad || cachedData == null) {
+            loadingStartTime = System.currentTimeMillis();
+            showLoadingState();
+        }
+
+        apiService.fetchPrice(currentCurrency, new BitcoinApiService.PriceCallback() {
+            @Override
+            public void onSuccess(JSONObject json) {
                 if (currentCurrency.equals("USD")) {
-                    cachedData = cachedUsdData;
-                    lastUpdate = usdLastUpdate;
-                } else if (currentCurrency.equals("EUR")) {
-                    cachedData = cachedEurData;
-                    lastUpdate = eurLastUpdate;
-                }
-
-                // If we have cached data and it's not expired, use it
-                if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
-                    updatePriceUI(cachedData);
-                    return;
-                }
-
-                // Show loading state when cache is not available (first load or cache expired)
-                if (isFirstLoad) {
-                    runOnUiThread(() -> {
-                        loadingStartTime = System.currentTimeMillis();
-                        showLoadingState();
-                    });
-                } else if (cachedData == null) {
-                    // For subsequent loads with no cache, show loading too
-                    runOnUiThread(() -> {
-                        showLoadingState();
-                    });
-                }
-
-                // Otherwise fetch new data
-                String urlString = "https://api.exchange.coinbase.com/products/BTC-" + currentCurrency + "/stats";
-                URL url = new URL(urlString);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
-
-                int responseCode = conn.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuilder content = new StringBuilder();
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        content.append(line);
-                    }
-                    in.close();
-
-                    JSONObject json = new JSONObject(content.toString());
-
-                    // Cache the data
-                    if (currentCurrency.equals("USD")) {
-                        cachedUsdData = json;
-                        usdLastUpdate = currentTime;
-                    } else if (currentCurrency.equals("EUR")) {
-                        cachedEurData = json;
-                        eurLastUpdate = currentTime;
-                    }
-
-                    updatePriceUI(json);
+                    cachedUsdData = json;
+                    usdLastUpdate = currentTime;
                 } else {
-                    runOnUiThread(() -> showError("COINBASE API"));
+                    cachedEurData = json;
+                    eurLastUpdate = currentTime;
                 }
-                conn.disconnect();
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> showError("LOST CONNECTION"));
+                updatePriceUI(json);
             }
-        }).start();
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> showError(message));
+            }
+        });
     }
 
     private void showError(String message) {
@@ -556,15 +469,11 @@ private TextView errorMessageTextView;
 
             // Set colors based on theme
             if (nightMode) {
-                // ERROR - same color as price in night mode
-                priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
-                // LOST CONNECTION - color for price down in night mode
-                errorMessageTextView.setTextColor(Color.parseColor("#966211"));
+                priceTextView.setTextColor(getColor(R.color.price_night_color));
+                errorMessageTextView.setTextColor(getColor(R.color.price_down_night));
             } else {
-                // ERROR - same color as price in day mode
-                priceTextView.setTextColor(Color.parseColor("#000000"));
-                // LOST CONNECTION - color for price down in day mode
-                errorMessageTextView.setTextColor(Color.parseColor("#FAA31B"));
+                priceTextView.setTextColor(getColor(R.color.price_day_color));
+                errorMessageTextView.setTextColor(getColor(R.color.price_down_day));
             }
         });
     }
@@ -605,11 +514,10 @@ private TextView errorMessageTextView;
                     changeTextView.setVisibility(View.VISIBLE);
                     changePercentageTextView.setVisibility(View.VISIBLE);
 
-                        // Restore price text color based on theme
                         if (nightMode) {
-                            priceTextView.setTextColor(Color.parseColor("#e7dfc6"));
+                            priceTextView.setTextColor(getColor(R.color.price_night_color));
                         } else {
-                            priceTextView.setTextColor(Color.parseColor("#000000"));
+                            priceTextView.setTextColor(getColor(R.color.price_day_color));
                         }
 
                         // Format price with commas and add currency symbol
@@ -632,24 +540,20 @@ private TextView errorMessageTextView;
                             priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, cachedFontSizeSp);
                         });
 
-                    // Calculate change direction and colors
                     String arrow = isPriceUp ? "▲" : "▼";
-                    int color;
-                    if (isPriceUp) {
-                        color = nightMode ? Color.parseColor("#005e0d") : Color.parseColor("#32CD32");
-                    } else {
-                        color = nightMode ? Color.parseColor("#966211") : Color.parseColor("#FAA31B");
-                    }
+                    int changeColor = isPriceUp
+                        ? (nightMode ? getColor(R.color.price_up_night) : getColor(R.color.price_up_day))
+                        : (nightMode ? getColor(R.color.price_down_night) : getColor(R.color.price_down_day));
 
                     // Set change text with arrow: ▲ 123$
                     String changeText = arrow + String.format(Locale.US, "%,d", Math.abs(finalPriceChange)) + finalCurrencySymbol;
                     changeTextView.setText(changeText);
-                    changeTextView.setTextColor(color);
+                    changeTextView.setTextColor(changeColor);
 
                     // Set percentage text: ▲ 0.42%
                     String changePercentageText = arrow + finalPriceChangePercentage + "%";
                     changePercentageTextView.setText(changePercentageText);
-                    changePercentageTextView.setTextColor(color);
+                    changePercentageTextView.setTextColor(changeColor);
 
                     // Set change text sizes to 15vh
                     float changeSizeSp = (screenHeight * 0.15f) / density;
@@ -676,66 +580,19 @@ private TextView errorMessageTextView;
      * @return maximum font size in SP units
      */
     private float calculateMaxFontSizeForDigitCount(int digitCount, int availableWidthPx) {
-        // Build "worst case" text - all 9s to account for widest digits
         StringBuilder worstCasePrice = new StringBuilder();
         for (int i = 0; i < digitCount; i++) {
             worstCasePrice.append('9');
         }
-        // Insert commas for thousands separators (e.g., 999999 -> 999,999)
         if (digitCount > 3) {
             worstCasePrice.insert(digitCount - 3, ',');
         }
         worstCasePrice.append('$');
 
-        String worstCaseText = worstCasePrice.toString();
-
         android.util.Log.d("PriceActivity", "Calculating font size for digitCount=" + digitCount +
-            ", worstCaseText='" + worstCaseText + "', availableWidth=" + availableWidthPx +
-            ", screenHeight=" + screenHeight + ", density=" + density);
+            ", worstCaseText='" + worstCasePrice + "', availableWidth=" + availableWidthPx);
 
-        // Create Paint object with Abril Fatface font for measurement
-        Paint paint = new Paint();
-        paint.setTypeface(abrilFatfaceFont);
-        paint.setAntiAlias(true);
-
-        // Binary search for maximum font size
-        float lowSizePx = 1f; // Start with 1px
-        float highSizePx = screenHeight * 0.70f; // Max 70% of screen height
-        float bestSizePx = lowSizePx;
-
-        Rect textBounds = new Rect();
-
-        // Binary search with 25 iterations for precision
-        for (int i = 0; i < 25; i++) {
-            float midSizePx = (lowSizePx + highSizePx) / 2f;
-            paint.setTextSize(midSizePx);
-            paint.getTextBounds(worstCaseText, 0, worstCaseText.length(), textBounds);
-
-            float measuredWidth = textBounds.width();
-
-            if (measuredWidth <= availableWidthPx) {
-                // This size fits, try larger
-                bestSizePx = midSizePx;
-                lowSizePx = midSizePx;
-            } else {
-                // This size is too big, try smaller
-                highSizePx = midSizePx;
-            }
-        }
-
-        android.util.Log.d("PriceActivity", "Before margins: bestSizePx=" + bestSizePx);
-
-        // Add small safety margin (95% of calculated size)
-        bestSizePx *= 0.95f;
-
-        // Limit to max 60vh (leave room for other UI elements)
-        float maxSizeFromHeight = screenHeight * 0.60f;
-        bestSizePx = Math.min(bestSizePx, maxSizeFromHeight);
-
-        android.util.Log.d("PriceActivity", "Final font size: " + (bestSizePx / density) + "sp");
-
-        // Convert pixels to SP units
-        return bestSizePx / density;
+        return calculateFontSize(worstCasePrice.toString(), availableWidthPx);
     }
 
     /**
@@ -767,44 +624,40 @@ private TextView errorMessageTextView;
     }
     
     private float calculateMaxFontSizeForError(int availableWidthPx) {
-        // For "ERROR" text (5 characters)
+        return calculateFontSize("ERROR", availableWidthPx);
+    }
+
+    private float calculateFontSize(String text, int availableWidthPx) {
         Paint paint = new Paint();
         paint.setTypeface(abrilFatfaceFont);
         paint.setAntiAlias(true);
-        
-        // Binary search for maximum font size
-        float lowSizePx = 1f; // Start with 1px
-        float highSizePx = screenHeight * 0.70f; // Max 70% of screen height
+
+        float lowSizePx = 1f;
+        float highSizePx = screenHeight * 0.70f;
         float bestSizePx = lowSizePx;
-        
+
         Rect textBounds = new Rect();
-        
-        // Binary search with 25 iterations for precision
+
         for (int i = 0; i < 25; i++) {
             float midSizePx = (lowSizePx + highSizePx) / 2f;
             paint.setTextSize(midSizePx);
-            paint.getTextBounds("ERROR", 0, 5, textBounds);
-            
-            float measuredWidth = textBounds.width();
-            
-            if (measuredWidth <= availableWidthPx) {
-                // This size fits, try larger
+            paint.getTextBounds(text, 0, text.length(), textBounds);
+
+            if (textBounds.width() <= availableWidthPx) {
                 bestSizePx = midSizePx;
                 lowSizePx = midSizePx;
             } else {
-                // This size is too big, try smaller
                 highSizePx = midSizePx;
             }
         }
-        
-        // Add small safety margin (95% of calculated size)
+
         bestSizePx *= 0.95f;
-        
-        // Limit to max 60vh (leave room for other UI elements)
+
         float maxSizeFromHeight = screenHeight * 0.60f;
         bestSizePx = Math.min(bestSizePx, maxSizeFromHeight);
-        
-        // Convert pixels to SP units
+
+        android.util.Log.d("PriceActivity", "Final font size: " + (bestSizePx / density) + "sp");
+
         return bestSizePx / density;
     }
 
