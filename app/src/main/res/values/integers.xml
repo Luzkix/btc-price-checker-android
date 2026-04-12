@@ -1,10 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Application parameters - modify these values to adjust app behavior.
+    All numeric values used by PriceActivity are centralized here for easy configuration.
+-->
 <resources>
+    <!-- Timing -->
     <integer name="price_update_interval_seconds">10</integer>
     <integer name="timer_interval_ms">30000</integer>
     <integer name="cache_expiry_seconds">10</integer>
-    <integer name="font_binary_search_iterations">25</integer>
     <integer name="min_loading_duration_ms">4000</integer>
     <integer name="connection_timeout_ms">5000</integer>
     <integer name="min_available_width_px">300</integer>
+    <integer name="font_binary_search_iterations">25</integer>
+
+    <!-- Font size percentages (divide by 100 in code to get fraction) -->
+    <integer name="clock_size_percent">14</integer>
+    <integer name="change_size_percent">15</integer>
+    <integer name="available_width_percent">95</integer>
+    <integer name="font_safety_margin">95</integer>
+    <integer name="font_max_height_percent">60</integer>
+    <integer name="font_search_max_height_percent">70</integer>
+
+    <!-- Layout margins and paddings (divide by 1000 in code) -->
+    <integer name="btc_text_margin_start_permil">40</integer>
+    <integer name="clock_top_padding_permil">15</integer>
+    <integer name="clock_horizontal_padding_permil">30</integer>
+
+    <!-- Aspect ratio thresholds (multiply by 10 for comparison) -->
+    <integer name="tablet_max_aspect_ratio_x10">16</integer>
+    <integer name="wide_max_aspect_ratio_x10">19</integer>
+
+    <!-- Opacity values (0-100) -->
+    <integer name="night_mode_logo_alpha">70</integer>
+    <integer name="day_mode_logo_alpha">100</integer>
 </resources>

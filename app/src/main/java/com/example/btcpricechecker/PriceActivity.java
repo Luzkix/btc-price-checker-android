@@ -1,6 +1,5 @@
 package com.example.btcpricechecker;
 
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -26,7 +25,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PriceActivity extends AppCompatActivity {
-    private static final int PRICE_UPDATE_INTERVAL = 10;
     private String currentCurrency = "USD";
     private boolean nightMode = false;
     private Timer timer;
@@ -43,7 +41,7 @@ public class PriceActivity extends AppCompatActivity {
     private View borderView;
     private TextView clockTextView;
     private ImageView btcTextImage;
-    private ImageView btcLogoImage; // For ultra-wide layout
+    private ImageView btcLogoImage;
     private LinearLayout btcTextBlock;
     private TextView priceTextView;
     private TextView currencyTextView;
@@ -52,6 +50,7 @@ public class PriceActivity extends AppCompatActivity {
     private TextView lastUpdateTextView;
     private LinearLayout lastUpdateBlock;
     private LinearLayout clockBlock;
+    private TextView errorMessageTextView;
 
     // Font
     private Typeface abrilFatfaceFont;
@@ -61,26 +60,25 @@ public class PriceActivity extends AppCompatActivity {
     private int screenWidth;
     private float density;
 
-// Error message TextView
-private TextView errorMessageTextView;
+    // Config values (loaded from resources)
+    private int priceUpdateIntervalSeconds;
+    private int timerIntervalMs;
+    private int minLoadingDurationMs;
+    private int fontBinarySearchIterations;
+    private int minAvailableWidthPx;
 
- // Font size caching variables
-    private int cachedDigitCount = -1; // -1 = not calculated yet
-    private float cachedFontSizeSp = -1f; // cached font size in SP
+    // Font size caching
+    private int cachedDigitCount = -1;
+    private float cachedFontSizeSp = -1f;
 
-    // Loading state variables
+    // Loading state
     private boolean isFirstLoad = true;
     private long loadingStartTime = 0;
     private boolean isLoadingStateVisible = false;
-    private static final long MIN_LOADING_DURATION_MS = 4000; // Minimum 4 seconds for loading state
 
     // Aspect ratio category
-    private enum AspectRatioCategory {
-        TABLET, // <= 1.6
-        WIDE, // > 1.6 && <= 1.9
-        ULTRAWIDE // > 1.9
-    }
-    private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // Default fallback
+    private enum AspectRatioCategory { TABLET, WIDE, ULTRAWIDE }
+    private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,10 +103,10 @@ private TextView errorMessageTextView;
 
         // Determine aspect ratio category and select appropriate layout
         int layoutRes;
-        if (aspectRatio <= 1.6f) {
+        if (aspectRatio <= getTabletMaxAspectRatio()) {
             aspectRatioCategory = AspectRatioCategory.TABLET;
             layoutRes = R.layout.activity_price_tablet;
-        } else if (aspectRatio <= 1.9f) {
+        } else if (aspectRatio <= getWideMaxAspectRatio()) {
             aspectRatioCategory = AspectRatioCategory.WIDE;
             layoutRes = R.layout.activity_price_wide;
         } else {
@@ -131,6 +129,9 @@ private TextView errorMessageTextView;
 
         // Initialize API service
         apiService = new BitcoinApiService();
+
+        // Load config from resources
+        loadConfig();
 
         // Extract parameters
         Bundle extras = getIntent().getExtras();
@@ -177,7 +178,6 @@ private TextView errorMessageTextView;
     }
 
     private void applyFont() {
-        // Apply Abril Fatface font to price-related text views
         if (abrilFatfaceFont != null) {
             clockTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
             priceTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
@@ -185,6 +185,66 @@ private TextView errorMessageTextView;
             changeTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
             changePercentageTextView.setTypeface(abrilFatfaceFont, Typeface.BOLD);
         }
+    }
+
+    private void loadConfig() {
+        priceUpdateIntervalSeconds = getResources().getInteger(R.integer.price_update_interval_seconds);
+        timerIntervalMs = getResources().getInteger(R.integer.timer_interval_ms);
+        minLoadingDurationMs = getResources().getInteger(R.integer.min_loading_duration_ms);
+        fontBinarySearchIterations = getResources().getInteger(R.integer.font_binary_search_iterations);
+        minAvailableWidthPx = getResources().getInteger(R.integer.min_available_width_px);
+    }
+
+    private float getClockSizePercent() {
+        return getResources().getInteger(R.integer.clock_size_percent) / 100f;
+    }
+
+    private float getChangeSizePercent() {
+        return getResources().getInteger(R.integer.change_size_percent) / 100f;
+    }
+
+    private float getAvailableWidthPercent() {
+        return getResources().getInteger(R.integer.available_width_percent) / 100f;
+    }
+
+    private float getFontSafetyMargin() {
+        return getResources().getInteger(R.integer.font_safety_margin) / 100f;
+    }
+
+    private float getFontMaxHeightPercent() {
+        return getResources().getInteger(R.integer.font_max_height_percent) / 100f;
+    }
+
+    private float getFontSearchMaxHeightPercent() {
+        return getResources().getInteger(R.integer.font_search_max_height_percent) / 100f;
+    }
+
+    private float getBtcTextMarginPermil() {
+        return getResources().getInteger(R.integer.btc_text_margin_start_permil) / 1000f;
+    }
+
+    private float getClockTopPaddingPermil() {
+        return getResources().getInteger(R.integer.clock_top_padding_permil) / 1000f;
+    }
+
+    private float getClockHorizontalPaddingPermil() {
+        return getResources().getInteger(R.integer.clock_horizontal_padding_permil) / 1000f;
+    }
+
+    private float getTabletMaxAspectRatio() {
+        return getResources().getInteger(R.integer.tablet_max_aspect_ratio_x10) / 10f;
+    }
+
+    private float getWideMaxAspectRatio() {
+        return getResources().getInteger(R.integer.wide_max_aspect_ratio_x10) / 10f;
+    }
+
+    private float getNightModeLogoAlpha() {
+        return getResources().getInteger(R.integer.night_mode_logo_alpha) / 100f;
+    }
+
+    private float getDayModeLogoAlpha() {
+        return getResources().getInteger(R.integer.day_mode_logo_alpha) / 100f;
     }
 
     private void applyTheme() {
@@ -197,7 +257,7 @@ private TextView errorMessageTextView;
             currencyTextView.setTextColor(getColor(R.color.currency_night_color));
             lastUpdateTextView.setTextColor(getColor(R.color.last_update_night));
 
-            setLogoAlpha(0.7f);
+            setLogoAlpha(getNightModeLogoAlpha());
         } else {
             rootLayout.setBackgroundColor(getColor(R.color.price_day_bg));
             if (borderView != null) borderView.setVisibility(View.VISIBLE);
@@ -207,7 +267,7 @@ private TextView errorMessageTextView;
             currencyTextView.setTextColor(getColor(R.color.currency_day_color));
             lastUpdateTextView.setTextColor(getColor(R.color.last_update_day));
 
-            setLogoAlpha(1.0f);
+            setLogoAlpha(getDayModeLogoAlpha());
         }
     }
 
@@ -265,48 +325,31 @@ private TextView errorMessageTextView;
     private void applySharedLayoutAdjustments() {
         if (btcTextBlock != null) {
             LinearLayout.LayoutParams btcParams = (LinearLayout.LayoutParams) btcTextBlock.getLayoutParams();
-            btcParams.setMarginStart((int) (screenWidth * 0.04f));
+            btcParams.setMarginStart((int) (screenWidth * getBtcTextMarginPermil()));
             btcTextBlock.setLayoutParams(btcParams);
         }
 
         if (clockBlock != null) {
-            int topPadding = (int) (screenWidth * 0.015f);
-            int rightPadding = (int) (screenWidth * 0.03f);
+            int topPadding = (int) (screenWidth * getClockTopPaddingPermil());
+            int rightPadding = (int) (screenWidth * getClockHorizontalPaddingPermil());
             clockBlock.setPadding(0, topPadding, rightPadding, 0);
         }
     }
 
     private void applyUltraWideLayout() {
-        // Ultra-wide layout (aspect ratio > 1.9):
-        // - Bitcoin logo on same row as clock (space-between)
-        // - Clock: reduced top padding (1.5vw), horizontal padding unchanged (3vw)
-        // - Last price info: properly positioned inside border
-
-        // BTC text block is already hidden in XML (visibility="gone")
-
-        // Setup bitcoin logo if present
         if (btcLogoImage != null && clockBlock != null) {
-            // Set logo height to match clock height exactly (100%)
-            float clockSizeSp = (screenHeight * 0.14f) / density;
+            float clockSizeSp = (screenHeight * getClockSizePercent()) / density;
             float clockSizePx = clockSizeSp * density;
-            int logoHeight = (int) clockSizePx; // 100% of clock height
+            int logoHeight = (int) clockSizePx;
 
             LinearLayout.LayoutParams logoParams = (LinearLayout.LayoutParams) btcLogoImage.getLayoutParams();
             logoParams.height = logoHeight;
             logoParams.width = LinearLayout.LayoutParams.WRAP_CONTENT;
             btcLogoImage.setLayoutParams(logoParams);
 
-            // Set padding for clock block (1.5vw top, 3vw horizontal)
-            int horizontalPadding = (int) (screenWidth * 0.03f);
-            int topPadding = (int) (screenWidth * 0.015f); // 1.5vw from top (50% of previous)
+            int horizontalPadding = (int) (screenWidth * getClockHorizontalPaddingPermil());
+            int topPadding = (int) (screenWidth * getClockTopPaddingPermil());
             clockBlock.setPadding(horizontalPadding, topPadding, horizontalPadding, 0);
-        }
-
-        // Last update block - already positioned in XML with margins
-        if (lastUpdateBlock != null) {
-            // Note: lastUpdateBlock is inside a FrameLayout (lastUpdateBlockContainer)
-            // Margins are set in XML to match border width
-            // Text size is set programmatically based on screen dimensions
         }
     }
 
@@ -323,16 +366,13 @@ private TextView errorMessageTextView;
 
     private void showLoadingState() {
         runOnUiThread(() -> {
-            // Set placeholder price text - using em dash to avoid zero values
-            priceTextView.setText(""); // em dash instead of numeric 0
+            priceTextView.setText("");
 
-            // Hide change section, show loading message
             changeTextView.setVisibility(View.GONE);
             changePercentageTextView.setVisibility(View.GONE);
             errorMessageTextView.setVisibility(View.VISIBLE);
 
-            // Set loading text with proper size (15vh) to match error display
-            float changeSizeSp = (screenHeight * 0.15f) / density;
+            float changeSizeSp = (screenHeight * getChangeSizePercent()) / density;
             errorMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
             errorMessageTextView.setText("LOADING");
 
@@ -342,21 +382,19 @@ private TextView errorMessageTextView;
                 errorMessageTextView.setTextColor(getColor(R.color.price_day_color));
             }
 
-            // Mark loading state as visible
             isLoadingStateVisible = true;
         });
     }
 
     private void hideLoadingState() {
-        isFirstLoad = false; // First load completed
+        isFirstLoad = false;
 
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - loadingStartTime;
-        long remainingTime = MIN_LOADING_DURATION_MS - elapsedTime;
+        long remainingTime = minLoadingDurationMs - elapsedTime;
 
         if (isLoadingStateVisible) {
-            if (elapsedTime >= MIN_LOADING_DURATION_MS) {
-                // Minimum duration already elapsed, hide immediately
+            if (elapsedTime >= minLoadingDurationMs) {
                 isLoadingStateVisible = false;
                 runOnUiThread(() -> {
                     errorMessageTextView.setVisibility(View.GONE);
@@ -364,7 +402,6 @@ private TextView errorMessageTextView;
                     changePercentageTextView.setVisibility(View.VISIBLE);
                 });
             } else {
-                // Schedule hide after the minimum duration
                 handler.postDelayed(() -> {
                     isLoadingStateVisible = false;
                     runOnUiThread(() -> {
@@ -380,7 +417,6 @@ private TextView errorMessageTextView;
     private void startPriceUpdates() {
         updateClock();
 
-        // Show loading state on first load
         if (isFirstLoad) {
             loadingStartTime = System.currentTimeMillis();
             showLoadingState();
@@ -397,17 +433,15 @@ private TextView errorMessageTextView;
                     fetchBitcoinPrice();
                 });
             }
-        }, 0, 30000); // Update every 30 seconds
+        }, 0, timerIntervalMs);
     }
 
     private void updateClock() {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         String timeStr = sdf.format(new Date());
-        // Add clock emoji/icon before time
         clockTextView.setText("🕑" + timeStr);
 
-        // Set clock text size to 14vh
-        float clockSizeSp = (screenHeight * 0.14f) / density;
+        float clockSizeSp = (screenHeight * getClockSizePercent()) / density;
         clockTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, clockSizeSp);
     }
 
@@ -416,7 +450,7 @@ private TextView errorMessageTextView;
         long lastUpdate = currentCurrency.equals("USD") ? usdLastUpdate : eurLastUpdate;
         JSONObject cachedData = currentCurrency.equals("USD") ? cachedUsdData : cachedEurData;
 
-        if (cachedData != null && (currentTime - lastUpdate) < PRICE_UPDATE_INTERVAL) {
+        if (cachedData != null && (currentTime - lastUpdate) < priceUpdateIntervalSeconds) {
             updatePriceUI(cachedData);
             return;
         }
@@ -449,21 +483,16 @@ private TextView errorMessageTextView;
     private void showError(String message) {
         runOnUiThread(() -> {
             priceTextView.setText("ERROR");
-            
-            // Update font size for ERROR text to match the price text size calculation logic
             updatePriceTextSizeForError();
 
-            // Hide change views, show error message
             changeTextView.setVisibility(View.GONE);
             changePercentageTextView.setVisibility(View.GONE);
             errorMessageTextView.setVisibility(View.VISIBLE);
 
-            // Set error message text with proper size (15vh)
             errorMessageTextView.setText(message);
-            float changeSizeSp = (screenHeight * 0.15f) / density;
+            float changeSizeSp = (screenHeight * getChangeSizePercent()) / density;
             errorMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
 
-            // Set colors based on theme
             if (nightMode) {
                 priceTextView.setTextColor(getColor(R.color.price_night_color));
                 errorMessageTextView.setTextColor(getColor(R.color.price_down_night));
@@ -551,16 +580,12 @@ private TextView errorMessageTextView;
                     changePercentageTextView.setText(changePercentageText);
                     changePercentageTextView.setTextColor(changeColor);
 
-                    // Set change text sizes to 15vh
-                    float changeSizeSp = (screenHeight * 0.15f) / density;
+                    float changeSizeSp = (screenHeight * getChangeSizePercent()) / density;
                     changeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
                     changePercentageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
 
-                    // Update last update time
                     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
                     lastUpdateTextView.setText("Last price info: " + sdf.format(new Date()) + " CET");
-
-                    // Note: Text size is defined in XML layouts (8sp) for consistent appearance across devices
                 }
             });
         } catch (Exception e) {
@@ -596,26 +621,18 @@ private TextView errorMessageTextView;
      * This gives the actual width that text can occupy.
      */
     private int getAvailableWidthForPriceText() {
-        // Use real screen width with minimal 5% safety margin
-        // Border is handled by the layout margins, not subtracted here
-        int availableWidth = (int) (screenWidth * 0.95f); // 5% safety margin
+        int availableWidth = (int) (screenWidth * getAvailableWidthPercent());
 
         android.util.Log.d("PriceActivity", "getAvailableWidth: screenWidth=" + screenWidth +
-            ", available=" + availableWidth + " (95% of screen)");
+            ", available=" + availableWidth);
 
-        return Math.max(availableWidth, 300); // Minimum 300px fallback
+        return Math.max(availableWidth, minAvailableWidthPx);
     }
     
     private void updatePriceTextSizeForError() {
-        // Use the same font size calculation logic as for normal prices
-        // Calculate font size for "ERROR" text (5 characters)
         int availableWidth = getAvailableWidthForPriceText();
         float fontSize = calculateMaxFontSizeForError(availableWidth);
-        
-        // Reduce font size by 5% for ERROR text
-        fontSize *= 0.95f;
-        
-        // Apply the font size to priceTextView
+        fontSize *= getFontSafetyMargin();
         priceTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
     }
     
@@ -629,12 +646,12 @@ private TextView errorMessageTextView;
         paint.setAntiAlias(true);
 
         float lowSizePx = 1f;
-        float highSizePx = screenHeight * 0.70f;
+        float highSizePx = screenHeight * getFontSearchMaxHeightPercent();
         float bestSizePx = lowSizePx;
 
         Rect textBounds = new Rect();
 
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < fontBinarySearchIterations; i++) {
             float midSizePx = (lowSizePx + highSizePx) / 2f;
             paint.setTextSize(midSizePx);
             paint.getTextBounds(text, 0, text.length(), textBounds);
@@ -647,9 +664,9 @@ private TextView errorMessageTextView;
             }
         }
 
-        bestSizePx *= 0.95f;
+        bestSizePx *= getFontSafetyMargin();
 
-        float maxSizeFromHeight = screenHeight * 0.60f;
+        float maxSizeFromHeight = screenHeight * getFontMaxHeightPercent();
         bestSizePx = Math.min(bestSizePx, maxSizeFromHeight);
 
         android.util.Log.d("PriceActivity", "Final font size: " + (bestSizePx / density) + "sp");

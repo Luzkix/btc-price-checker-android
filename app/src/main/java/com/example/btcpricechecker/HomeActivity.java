@@ -1,17 +1,13 @@
 package com.example.btcpricechecker;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
 
 public class HomeActivity extends AppCompatActivity {
-    private boolean nightMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
