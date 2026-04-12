@@ -70,17 +70,23 @@ public class PriceActivity extends AppCompatActivity {
 // Error message TextView
 private TextView errorMessageTextView;
 
-// Font size caching variables
-private int cachedDigitCount = -1; // -1 = not calculated yet
-private float cachedFontSizeSp = -1f; // cached font size in SP
+ // Font size caching variables
+    private int cachedDigitCount = -1; // -1 = not calculated yet
+    private float cachedFontSizeSp = -1f; // cached font size in SP
 
-// Aspect ratio category
-private enum AspectRatioCategory {
-    TABLET, // <= 1.6
-    WIDE, // > 1.6 && <= 1.9
-    ULTRAWIDE // > 1.9
-}
-private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // Default fallback
+    // Loading state variables
+    private boolean isFirstLoad = true;
+    private long loadingStartTime = 0;
+    private boolean isLoadingStateVisible = false;
+    private static final long MIN_LOADING_DURATION_MS = 4000; // Minimum 4 seconds for loading state
+
+    // Aspect ratio category
+    private enum AspectRatioCategory {
+        TABLET, // <= 1.6
+        WIDE, // > 1.6 && <= 1.9
+        ULTRAWIDE // > 1.9
+    }
+    private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // Default fallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -360,8 +366,72 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
         );
     }
 
+    private void showLoadingState() {
+        runOnUiThread(() -> {
+            // Set placeholder price text - using em dash to avoid zero values
+            priceTextView.setText(""); // em dash instead of numeric 0
+
+            // Hide change section, show loading message
+            changeTextView.setVisibility(View.GONE);
+            changePercentageTextView.setVisibility(View.GONE);
+            errorMessageTextView.setVisibility(View.VISIBLE);
+
+            // Set loading text with proper size (15vh) to match error display
+            float changeSizeSp = (screenHeight * 0.15f) / density;
+            errorMessageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, changeSizeSp);
+            errorMessageTextView.setText("LOADING");
+
+            // Set colors based on theme
+            if (nightMode) {
+                errorMessageTextView.setTextColor(Color.parseColor("#6B6C6C")); // Gray color for night mode
+            } else {
+                errorMessageTextView.setTextColor(Color.parseColor("#000000")); // Black color for day mode
+            }
+
+            // Mark loading state as visible
+            isLoadingStateVisible = true;
+        });
+    }
+
+    private void hideLoadingState() {
+        isFirstLoad = false; // First load completed
+
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - loadingStartTime;
+        long remainingTime = MIN_LOADING_DURATION_MS - elapsedTime;
+
+        if (isLoadingStateVisible) {
+            if (elapsedTime >= MIN_LOADING_DURATION_MS) {
+                // Minimum duration already elapsed, hide immediately
+                isLoadingStateVisible = false;
+                runOnUiThread(() -> {
+                    errorMessageTextView.setVisibility(View.GONE);
+                    changeTextView.setVisibility(View.VISIBLE);
+                    changePercentageTextView.setVisibility(View.VISIBLE);
+                });
+            } else {
+                // Schedule hide after the minimum duration
+                handler.postDelayed(() -> {
+                    isLoadingStateVisible = false;
+                    runOnUiThread(() -> {
+                        errorMessageTextView.setVisibility(View.GONE);
+                        changeTextView.setVisibility(View.VISIBLE);
+                        changePercentageTextView.setVisibility(View.VISIBLE);
+                    });
+                }, remainingTime);
+            }
+        }
+    }
+
     private void startPriceUpdates() {
         updateClock();
+
+        // Show loading state on first load
+        if (isFirstLoad) {
+            loadingStartTime = System.currentTimeMillis();
+            showLoadingState();
+        }
+
         fetchBitcoinPrice();
 
         timer = new Timer();
@@ -409,6 +479,19 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
                     return;
                 }
 
+                // Show loading state when cache is not available (first load or cache expired)
+                if (isFirstLoad) {
+                    runOnUiThread(() -> {
+                        loadingStartTime = System.currentTimeMillis();
+                        showLoadingState();
+                    });
+                } else if (cachedData == null) {
+                    // For subsequent loads with no cache, show loading too
+                    runOnUiThread(() -> {
+                        showLoadingState();
+                    });
+                }
+
                 // Otherwise fetch new data
                 String urlString = "https://api.exchange.coinbase.com/products/BTC-" + currentCurrency + "/stats";
                 URL url = new URL(urlString);
@@ -452,6 +535,9 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
 
     private void showError(String message) {
         runOnUiThread(() -> {
+            // Hide loading state when showing error
+            //hideLoadingState();
+
             // Set ERROR as price
             priceTextView.setText("ERROR");
 
@@ -506,12 +592,15 @@ private AspectRatioCategory aspectRatioCategory = AspectRatioCategory.WIDE; // D
 
             // Update the UI elements
             runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Restore visibility: hide error message, show change views
-                        errorMessageTextView.setVisibility(View.GONE);
-                        changeTextView.setVisibility(View.VISIBLE);
-                        changePercentageTextView.setVisibility(View.VISIBLE);
+                @Override
+                public void run() {
+                    // Hide loading state and show normal UI
+                    hideLoadingState();
+
+                    // Restore visibility: hide error message, show change views
+                    errorMessageTextView.setVisibility(View.GONE);
+                    changeTextView.setVisibility(View.VISIBLE);
+                    changePercentageTextView.setVisibility(View.VISIBLE);
 
                         // Restore price text color based on theme
                         if (nightMode) {
